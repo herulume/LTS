@@ -99,15 +99,15 @@ clock time;		// Global time
 			<label kind="synchronisation" x="256" y="176">release?</label>
 		</transition>
 	</template>
-	<system>const int fastest = 5;
-const int fast    = 10;
-const int slow    = 20;
-const int slowest = 25;
+	<system>const int fastest = 1;
+const int fast    = 2;
+const int slow    = 5;
+const int slowest = 10;
 
-Viking1 = Soldier(fastest);
-Viking2 = Soldier(fast);
-Viking3 = Soldier(slow);
-Viking4 = Soldier(slowest);
+Viking1 = Soldier(1);
+Viking2 = Soldier(2);
+Viking3 = Soldier(5);
+Viking4 = Soldier(10);
 
 system Viking1, Viking2, Viking3, Viking4, Torch;</system>
 	<queries>
@@ -148,7 +148,11 @@ system Viking1, Viking2, Viking3, Viking4, Torch;</system>
 			</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; Viking1.safe and Viking2.safe and Viking3.safe and Viking4.safe
+			<formula>E&lt;&gt; Viking1.safe and Viking2.safe and Viking3.safe and Viking4.safe and time&lt;17</formula>
+			<comment></comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; Viking1.safe and Viking2.safe and Viking3.safe and Viking4.safe and time==17
 			</formula>
 			<comment>Scheduling problem reformulated as reachability formula. Use
 'Diagnostic Trace:Fastest' option to find fastest solution.
