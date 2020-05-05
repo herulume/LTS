@@ -1,118 +1,146 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
 <nta>
-	<declaration>/*
- * Four vikings are about to cross a damaged bridge in the middle of the
- * night. The bridge can only carry two of the vikings at the time and to
- * find the way over the bridge the vikings need to bring a torch.  The
- * vikings need 5, 10, 20 and 25 minutes (one-way) respectively to cross
- * the bridge.
+	<declaration>chan take, release, takehand, releaseHand;
 
- * Does a schedule exist which gets all four vikings over the bridge
- * within 60 minutes?
- */
+bool side, middleC;
+bool hasBackie;
 
-const bool left = false;
-const bool right = true;
+clock time;	
 
-chan take, release;		// Take and release torch
-bool L;		// The side the torch is on
-clock time;		// Global time
+bool swap(bool b) { return not b; } 
 </declaration>
 	<template>
-		<name x="32" y="16">Soldier</name>
+		<name x="32" y="16">Person</name>
 		<parameter>const int delay</parameter>
-		<declaration>clock y;</declaration>
-		<location id="id0" x="288" y="80">
+		<declaration>const bool left = false;
+const bool right = true;
+const bool notmiddle = false;
+const bool middle = true;
+const bool isBackie = true;
+const bool isNotBackie = false;
+
+clock y;
+bool backie;
+
+bool is(bool t) {return  t == isBackie; }
+bool isNot(bool t) {return  t == isNotBackie; }
+
+bool isOnTheLeft(bool side) { return side == left; }
+bool isOnTheRight(bool side) { return side == right; }
+
+bool isOnThe(bool t) { return t == middle; }
+bool isNotOnThe(bool t) { return t == notmiddle; }
+</declaration>
+		<location id="id0" x="459" y="76">
+			<name x="451" y="47">MiddleOfTraversing</name>
 		</location>
-		<location id="id1" x="288" y="216">
-			<name x="272" y="232">safe</name>
+		<location id="id1" x="459" y="263">
+			<name x="468" y="285">safe</name>
 		</location>
-		<location id="id2" x="64" y="216">
+		<location id="id2" x="-153" y="263">
+			<name x="-212" y="289">MiddleOfReturning</name>
 		</location>
-		<location id="id3" x="64" y="80">
-			<name x="56" y="48">unsafe</name>
+		<location id="id3" x="-153" y="76">
+			<name x="-200" y="47">unsafe</name>
 		</location>
 		<init ref="id3"/>
 		<transition>
-			<source ref="id2"/>
-			<target ref="id3"/>
-			<label kind="guard" x="72" y="176">y &gt;= delay</label>
-			<label kind="synchronisation" x="72" y="120">release!</label>
-		</transition>
-		<transition>
-			<source ref="id1"/>
-			<target ref="id2"/>
-			<label kind="guard" x="208" y="224">L == right</label>
-			<label kind="synchronisation" x="216" y="192">take !</label>
-			<label kind="assignment" x="104" y="224">y = 0</label>
-		</transition>
-		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="296" y="112">y &gt;= delay</label>
-			<label kind="synchronisation" x="296" y="160">release!</label>
+			<label kind="guard" x="680" y="51">y &gt;= delay and is(backie)</label>
+			<label kind="synchronisation" x="927" y="119">releaseHand!</label>
+			<label kind="assignment" x="663" y="93">backie = false, hasBackie = false</label>
+			<nail x="909" y="76"/>
+			<nail x="909" y="263"/>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="120" y="56">L == left</label>
-			<label kind="synchronisation" x="120" y="88">take !</label>
-			<label kind="assignment" x="216" y="56">y = 0</label>
+			<label kind="guard" x="0" y="-33">isOnTheLeft(side) and isOnThe(middleC)</label>
+			<label kind="synchronisation" x="119" y="9">takehand!</label>
+			<label kind="assignment" x="34" y="-59">y = 0, backie = true, hasBackie = true</label>
+			<nail x="153" y="-8"/>
+		</transition>
+		<transition>
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-17" y="85">isOnTheLeft(side) and isNotOnThe(middleC)</label>
+			<label kind="synchronisation" x="127" y="51">take!</label>
+			<label kind="assignment" x="-8" y="110">y = 0, backie = false, middleC = true</label>
+			<nail x="382" y="76"/>
+		</transition>
+		<transition>
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-238" y="187">y &gt;= delay</label>
+			<label kind="synchronisation" x="-229" y="153">release!</label>
+		</transition>
+		<transition>
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="93" y="272">isOnTheRight(side)</label>
+			<label kind="synchronisation" x="136" y="238">take!</label>
+			<label kind="assignment" x="93" y="297">y = 0</label>
+		</transition>
+		<transition>
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="guard" x="255" y="187">y &gt;= delay and isNot(backie) and hasBackie == false</label>
+			<label kind="synchronisation" x="399" y="144">release!</label>
+			<label kind="assignment" x="399" y="212">middleC = false</label>
 		</transition>
 	</template>
 	<template>
-		<name x="32" y="-16">Torch</name>
-		<location id="id4" x="200" y="192">
-			<name x="192" y="200">one</name>
+		<name x="32" y="-16">Flashlight</name>
+		<location id="id4" x="-59" y="34">
+			<name x="-76" y="0">one</name>
 		</location>
-		<location id="id5" x="200" y="48">
-			<urgent/>
+		<location id="id5" x="-637" y="34">
+			<name x="-653" y="2">free</name>
 		</location>
-		<location id="id6" x="64" y="120">
-			<name x="48" y="88">free</name>
-		</location>
-		<location id="id7" x="336" y="120">
-			<name x="328" y="88">two</name>
-		</location>
-		<init ref="id6"/>
-		<transition>
-			<source ref="id6"/>
-			<target ref="id5"/>
-			<label kind="synchronisation" x="104" y="56">take?</label>
-		</transition>
+		<init ref="id5"/>
 		<transition>
 			<source ref="id5"/>
 			<target ref="id4"/>
-		</transition>
-		<transition>
-			<source ref="id5"/>
-			<target ref="id7"/>
-			<label kind="synchronisation" x="264" y="56">take?</label>
+			<label kind="synchronisation" x="-348" y="-34">take?</label>
+			<nail x="-323" y="-51"/>
 		</transition>
 		<transition>
 			<source ref="id4"/>
-			<target ref="id6"/>
-			<label kind="synchronisation" x="96" y="176">release?</label>
-			<label kind="assignment" x="32" y="144">L = not  L</label>
-		</transition>
-		<transition>
-			<source ref="id7"/>
-			<target ref="id4"/>
-			<label kind="synchronisation" x="256" y="176">release?</label>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-357" y="8">release?</label>
+			<label kind="assignment" x="-391" y="51">side = swap(side)</label>
 		</transition>
 	</template>
-	<system>const int fastest = 1;
-const int fast    = 2;
-const int slow    = 5;
-const int slowest = 10;
+	<template>
+		<name>Backpack</name>
+		<location id="id6" x="-518" y="-42">
+			<name x="-534" y="-74">alone</name>
+		</location>
+		<location id="id7" x="-170" y="-42">
+			<name x="-183" y="-22">two</name>
+		</location>
+		<init ref="id6"/>
+		<transition>
+			<source ref="id7"/>
+			<target ref="id6"/>
+			<label kind="synchronisation" x="-399" y="-68">releaseHand?</label>
+		</transition>
+		<transition>
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-374" y="-161">takehand?</label>
+			<nail x="-340" y="-136"/>
+		</transition>
+	</template>
+	<system>TheDoctor = Person(1);
+RiverSong = Person(2);
+DonnaNoble = Person(5);
+RoseTaylor = Person(10);
 
-Viking1 = Soldier(1);
-Viking2 = Soldier(2);
-Viking3 = Soldier(5);
-Viking4 = Soldier(10);
 
-system Viking1, Viking2, Viking3, Viking4, Torch;</system>
+system TheDoctor, RiverSong, DonnaNoble, RoseTaylor, Flashlight, Backpack;</system>
 	<queries>
 		<query>
 			<formula>A[] not deadlock
@@ -121,41 +149,41 @@ system Viking1, Viking2, Viking3, Viking4, Torch;</system>
 			</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; Viking1.safe
+			<formula>E&lt;&gt; TheDoctor.safe
 			</formula>
 			<comment>Viking 1 can cross the bridge.
 			</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; Viking2.safe
+			<formula>E&lt;&gt; TheDoctor.safe
 			</formula>
 			<comment>
 			</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; Viking3.safe
+			<formula>E&lt;&gt; TheDoctor.safe
 			</formula>
 			<comment>
 			</comment>
 		</query>
 		<query>
-			<formula>A[] not (Viking4.safe and time&lt;slowest)
+			<formula>A[] not (RoseTaylor.safe and time&lt;10)
 			</formula>
 			<comment>
 			</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; Viking4.safe imply time&gt;=slowest
+			<formula>E&lt;&gt; RoseTaylor.safe imply time&gt;=10
 			</formula>
 			<comment>
 			</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; Viking1.safe and Viking2.safe and Viking3.safe and Viking4.safe and time&lt;17</formula>
+			<formula>E&lt;&gt; TheDoctor.safe and RiverSong.safe and DonnaNoble.safe and RoseTaylor.safe and time&lt;17</formula>
 			<comment></comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; Viking1.safe and Viking2.safe and Viking3.safe and Viking4.safe and time==17
+			<formula>E&lt;&gt; TheDoctor.safe and RiverSong.safe and DonnaNoble.safe and RoseTaylor.safe and time==17
 			</formula>
 			<comment>Scheduling problem reformulated as reachability formula. Use
 'Diagnostic Trace:Fastest' option to find fastest solution.
