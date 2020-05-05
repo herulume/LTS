@@ -4,7 +4,7 @@
 	<declaration>chan take, release, takehand, releaseHand;
 
 bool side, middleC;
-bool hasBackie;
+int [0, 2] sideB;
 
 clock time;	
 
@@ -17,14 +17,10 @@ bool swap(bool b) { return not b; }
 const bool right = true;
 const bool notmiddle = false;
 const bool middle = true;
-const bool isBackie = true;
-const bool isNotBackie = false;
+
 
 clock y;
-bool backie;
 
-bool is(bool t) {return  t == isBackie; }
-bool isNot(bool t) {return  t == isNotBackie; }
 
 bool isOnTheLeft(bool side) { return side == left; }
 bool isOnTheRight(bool side) { return side == right; }
@@ -33,7 +29,7 @@ bool isOnThe(bool t) { return t == middle; }
 bool isNotOnThe(bool t) { return t == notmiddle; }
 </declaration>
 		<location id="id0" x="459" y="76">
-			<name x="451" y="47">MiddleOfTraversing</name>
+			<name x="442" y="42">MiddleOfTraversing</name>
 		</location>
 		<location id="id1" x="459" y="263">
 			<name x="468" y="285">safe</name>
@@ -48,47 +44,46 @@ bool isNotOnThe(bool t) { return t == notmiddle; }
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="680" y="51">y &gt;= delay and is(backie)</label>
-			<label kind="synchronisation" x="927" y="119">releaseHand!</label>
-			<label kind="assignment" x="663" y="93">backie = false, hasBackie = false</label>
-			<nail x="909" y="76"/>
-			<nail x="909" y="263"/>
+			<label kind="guard" x="527" y="178">y &gt;= delay and sideB == 1</label>
+			<label kind="synchronisation" x="569" y="153">releaseHand!</label>
+			<nail x="586" y="76"/>
+			<nail x="586" y="76"/>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="0" y="-33">isOnTheLeft(side) and isOnThe(middleC)</label>
-			<label kind="synchronisation" x="119" y="9">takehand!</label>
-			<label kind="assignment" x="34" y="-59">y = 0, backie = true, hasBackie = true</label>
-			<nail x="153" y="-8"/>
+			<label kind="guard" x="25" y="-42">sideB == 0 and isOnThe(middleC)</label>
+			<label kind="synchronisation" x="101" y="-59">takehand!</label>
+			<label kind="assignment" x="118" y="-25">y = 0</label>
+			<nail x="144" y="1"/>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="-17" y="85">isOnTheLeft(side) and isNotOnThe(middleC)</label>
+			<label kind="guard" x="0" y="85">isOnTheLeft(side) and isNotOnThe(middleC)</label>
 			<label kind="synchronisation" x="127" y="51">take!</label>
-			<label kind="assignment" x="-8" y="110">y = 0, backie = false, middleC = true</label>
+			<label kind="assignment" x="51" y="110">y = 0, middleC = swap(middleC)</label>
 			<nail x="382" y="76"/>
 		</transition>
 		<transition>
 			<source ref="id2"/>
 			<target ref="id3"/>
-			<label kind="guard" x="-238" y="187">y &gt;= delay</label>
+			<label kind="guard" x="-238" y="178">y &gt;= delay</label>
 			<label kind="synchronisation" x="-229" y="153">release!</label>
 		</transition>
 		<transition>
 			<source ref="id1"/>
 			<target ref="id2"/>
-			<label kind="guard" x="93" y="272">isOnTheRight(side)</label>
-			<label kind="synchronisation" x="136" y="238">take!</label>
-			<label kind="assignment" x="93" y="297">y = 0</label>
+			<label kind="guard" x="102" y="272">isOnTheRight(side)</label>
+			<label kind="synchronisation" x="145" y="238">take!</label>
+			<label kind="assignment" x="102" y="297">y = 0, sideB =0</label>
 		</transition>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="255" y="187">y &gt;= delay and isNot(backie) and hasBackie == false</label>
-			<label kind="synchronisation" x="399" y="144">release!</label>
-			<label kind="assignment" x="399" y="212">middleC = false</label>
+			<label kind="guard" x="272" y="170">y &gt;= delay and sideB != 1</label>
+			<label kind="synchronisation" x="331" y="144">release!</label>
+			<label kind="assignment" x="272" y="204">middleC = swap(middleC)</label>
 		</transition>
 	</template>
 	<template>
@@ -126,11 +121,13 @@ bool isNotOnThe(bool t) { return t == notmiddle; }
 			<source ref="id7"/>
 			<target ref="id6"/>
 			<label kind="synchronisation" x="-399" y="-68">releaseHand?</label>
+			<label kind="assignment" x="-382" y="-34">sideB = 2</label>
 		</transition>
 		<transition>
 			<source ref="id6"/>
 			<target ref="id7"/>
 			<label kind="synchronisation" x="-374" y="-161">takehand?</label>
+			<label kind="assignment" x="-374" y="-195">sideB = 1</label>
 			<nail x="-340" y="-136"/>
 		</transition>
 	</template>
