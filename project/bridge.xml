@@ -3,13 +3,18 @@
 <nta>
 	<declaration>chan take, release, takehand, releaseHand;
 
-bool hasFlashlight;
-int [0, 3] side, sideB;
+bool side, hasFlashlight;
+int [0, 2] sideB;
 
 clock time;	
 
 
-bool swap(bool b) { return not b; }
+bool swap(bool b) { return not b; }</declaration>
+	<template>
+		<name x="32" y="16">Person</name>
+		<parameter>const int delay</parameter>
+		<declaration>clock y;
+
 
 bool isOnTheLeft(bool side) { return side == false; }
 bool isOnTheRight(bool side) { return side == true; }
@@ -21,12 +26,6 @@ bool someone(bool b) { return hasFlashlight == true; }
 bool noone(bool b) { return hasFlashlight == false; }
 
 bool canCross(int i) { return i == 0; }</declaration>
-	<template>
-		<name x="32" y="16">Person</name>
-		<parameter>const int delay</parameter>
-		<declaration>clock y;
-
-</declaration>
 		<location id="id0" x="459" y="76">
 			<name x="442" y="42">MiddleOfTraversing</name>
 		</location>
@@ -44,22 +43,22 @@ bool canCross(int i) { return i == 0; }</declaration>
 			<source ref="id0"/>
 			<target ref="id1"/>
 			<label kind="guard" x="527" y="178">y &gt;= delay and sideB == 1</label>
-			<label kind="synchronisation" x="569" y="153">release!</label>
+			<label kind="synchronisation" x="569" y="153">releaseHand!</label>
 			<nail x="586" y="76"/>
 			<nail x="586" y="76"/>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="25" y="-42">sideB == 0 and side == 0 and someone(hasFlashlight)</label>
-			<label kind="synchronisation" x="101" y="-59">take!</label>
+			<label kind="guard" x="0" y="-42">canCross(sideB) and someone(hasFlashlight)</label>
+			<label kind="synchronisation" x="101" y="-59">takehand!</label>
 			<label kind="assignment" x="118" y="-25">y = 0</label>
 			<nail x="144" y="1"/>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="0" y="85">side == 0 and noone(hasFlashlight)</label>
+			<label kind="guard" x="0" y="85">isOnTheLeft(side) and noone(hasFlashlight)</label>
 			<label kind="synchronisation" x="127" y="51">take!</label>
 			<label kind="assignment" x="0" y="110">y = 0,  hasFlashlight = swap(hasFlashlight)</label>
 			<nail x="382" y="76"/>
@@ -69,14 +68,13 @@ bool canCross(int i) { return i == 0; }</declaration>
 			<target ref="id3"/>
 			<label kind="guard" x="-238" y="178">y &gt;= delay</label>
 			<label kind="synchronisation" x="-229" y="153">release!</label>
-			<label kind="assignment" x="-238" y="204">sideB = 0</label>
 		</transition>
 		<transition>
 			<source ref="id1"/>
 			<target ref="id2"/>
-			<label kind="guard" x="93" y="272">side == 2 and sideB != 1</label>
+			<label kind="guard" x="93" y="272">isOnTheRight(side)</label>
 			<label kind="synchronisation" x="145" y="238">take!</label>
-			<label kind="assignment" x="93" y="297">y = 0, sideB = 0, side = 0</label>
+			<label kind="assignment" x="102" y="297">y = 0, sideB =0</label>
 		</transition>
 		<transition>
 			<source ref="id0"/>
@@ -99,14 +97,13 @@ bool canCross(int i) { return i == 0; }</declaration>
 			<source ref="id5"/>
 			<target ref="id4"/>
 			<label kind="synchronisation" x="-858" y="-357">take?</label>
-			<label kind="assignment" x="-875" y="-382">side = 1</label>
 			<nail x="-841" y="-340"/>
 		</transition>
 		<transition>
 			<source ref="id4"/>
 			<target ref="id5"/>
-			<label kind="synchronisation" x="-859" y="-272">release?</label>
-			<label kind="assignment" x="-858" y="-238">side = 2</label>
+			<label kind="synchronisation" x="-867" y="-272">release?</label>
+			<label kind="assignment" x="-892" y="-238">side = swap(side)</label>
 		</transition>
 	</template>
 	<template>
@@ -121,15 +118,14 @@ bool canCross(int i) { return i == 0; }</declaration>
 		<transition>
 			<source ref="id7"/>
 			<target ref="id6"/>
-			<label kind="synchronisation" x="-833" y="-391">release?</label>
+			<label kind="synchronisation" x="-833" y="-391">releaseHand?</label>
 			<label kind="assignment" x="-824" y="-357">sideB = 2</label>
 		</transition>
 		<transition>
 			<source ref="id6"/>
 			<target ref="id7"/>
-			<label kind="guard" x="-943" y="-561">canCross(sideB) and someone(hasFlashlight)</label>
-			<label kind="synchronisation" x="-816" y="-535">take?</label>
-			<label kind="assignment" x="-824" y="-586">sideB = 1</label>
+			<label kind="synchronisation" x="-816" y="-535">takehand?</label>
+			<label kind="assignment" x="-816" y="-467">sideB = 1</label>
 			<nail x="-782" y="-510"/>
 		</transition>
 	</template>
@@ -144,7 +140,24 @@ system TheDoctor, RiverSong, DonnaNoble, RoseTaylor, Flashlight, BuddySystem;</s
 		<query>
 			<formula>A[] not deadlock
 			</formula>
-			<comment>The system is deadlock free.</comment>
+			<comment>The system is deadlock free.
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; TheDoctor.right</formula>
+			<comment>Viking 1 can cross the bridge.
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; TheDoctor.right</formula>
+			<comment>
+			</comment>
+		</query>
+		<query>
+			<formula>E&lt;&gt; TheDoctor.right
+			</formula>
+			<comment>
+			</comment>
 		</query>
 		<query>
 			<formula>A[] not (RoseTaylor.right and time&lt;10)
