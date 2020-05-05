@@ -19,21 +19,19 @@ bool swap(bool b) { return not b; }</declaration>
 bool isOnTheLeft(bool side) { return side == false; }
 bool isOnTheRight(bool side) { return side == true; }
 
-bool isOnThe(bool t) { return t == true; }
-bool isNotOnThe(bool t) { return t == false; }
 
 bool someone(bool b) { return hasFlashlight == true; }
 bool noone(bool b) { return hasFlashlight == false; }
 
-bool canCross(int i) { return i == 0; }</declaration>
+</declaration>
 		<location id="id0" x="459" y="76">
-			<name x="442" y="42">MiddleOfTraversing</name>
+			<name x="442" y="42">ReadytoCross</name>
 		</location>
 		<location id="id1" x="459" y="263">
 			<name x="450" y="280">right</name>
 		</location>
 		<location id="id2" x="-153" y="263">
-			<name x="-212" y="289">MiddleOfReturning</name>
+			<name x="-212" y="289">ReadyToReturn</name>
 		</location>
 		<location id="id3" x="-153" y="76">
 			<name x="-161" y="42">left</name>
@@ -50,7 +48,7 @@ bool canCross(int i) { return i == 0; }</declaration>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="0" y="-42">canCross(sideB) and someone(hasFlashlight)</label>
+			<label kind="guard" x="0" y="-42">sideB == 0 and someone(hasFlashlight)</label>
 			<label kind="synchronisation" x="101" y="-59">takehand!</label>
 			<label kind="assignment" x="118" y="-25">y = 0</label>
 			<nail x="144" y="1"/>
@@ -86,24 +84,24 @@ bool canCross(int i) { return i == 0; }</declaration>
 	</template>
 	<template>
 		<name x="32" y="-16">Flashlight</name>
-		<location id="id4" x="-697" y="-246">
-			<name x="-714" y="-280">held</name>
+		<location id="id4" x="-680" y="-518">
+			<name x="-697" y="-552">held</name>
 		</location>
-		<location id="id5" x="-960" y="-246">
-			<name x="-976" y="-278">free</name>
+		<location id="id5" x="-977" y="-518">
+			<name x="-993" y="-550">free</name>
 		</location>
 		<init ref="id5"/>
 		<transition>
 			<source ref="id5"/>
 			<target ref="id4"/>
-			<label kind="synchronisation" x="-858" y="-357">take?</label>
-			<nail x="-841" y="-340"/>
+			<label kind="synchronisation" x="-841" y="-646">take?</label>
+			<nail x="-824" y="-629"/>
 		</transition>
 		<transition>
 			<source ref="id4"/>
 			<target ref="id5"/>
-			<label kind="synchronisation" x="-867" y="-272">release?</label>
-			<label kind="assignment" x="-892" y="-238">side = swap(side)</label>
+			<label kind="synchronisation" x="-867" y="-544">release?</label>
+			<label kind="assignment" x="-892" y="-501">side = swap(side)</label>
 		</transition>
 	</template>
 	<template>
@@ -145,17 +143,6 @@ system TheDoctor, RiverSong, DonnaNoble, RoseTaylor, Flashlight, BuddySystem;</s
 		</query>
 		<query>
 			<formula>E&lt;&gt; TheDoctor.right</formula>
-			<comment>Viking 1 can cross the bridge.
-			</comment>
-		</query>
-		<query>
-			<formula>E&lt;&gt; TheDoctor.right</formula>
-			<comment>
-			</comment>
-		</query>
-		<query>
-			<formula>E&lt;&gt; TheDoctor.right
-			</formula>
 			<comment>
 			</comment>
 		</query>
