@@ -140,24 +140,7 @@ system TheDoctor, RiverSong, DonnaNoble, RoseTaylor, Flashlight, BuddySystem;</s
 		<query>
 			<formula>A[] not deadlock
 			</formula>
-			<comment>The system is deadlock free.
-			</comment>
-		</query>
-		<query>
-			<formula>E&lt;&gt; TheDoctor.right</formula>
-			<comment>Viking 1 can cross the bridge.
-			</comment>
-		</query>
-		<query>
-			<formula>E&lt;&gt; TheDoctor.right</formula>
-			<comment>
-			</comment>
-		</query>
-		<query>
-			<formula>E&lt;&gt; TheDoctor.right
-			</formula>
-			<comment>
-			</comment>
+			<comment>The system is deadlock free.</comment>
 		</query>
 		<query>
 			<formula>A[] not (RoseTaylor.right and time&lt;10)
