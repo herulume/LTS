@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
 <nta>
-	<declaration>chan take, release, takehand, releaseHand;
+	<declaration>chan take, release, takeHand, releaseHand;
 
 bool side, hasFlashlight;
-int [0, 2] sideB;
+int [0, 2] buddy;
 
 clock time;	
 
@@ -21,7 +21,7 @@ bool isOnTheRight(bool side) { return side == true; }
 
 
 bool someone(bool b) { return hasFlashlight == true; }
-bool noone(bool b) { return hasFlashlight == false; }
+
 
 </declaration>
 		<location id="id0" x="459" y="76">
@@ -40,7 +40,7 @@ bool noone(bool b) { return hasFlashlight == false; }
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="527" y="178">y &gt;= delay and sideB == 1</label>
+			<label kind="guard" x="527" y="178">y &gt;= delay</label>
 			<label kind="synchronisation" x="569" y="153">releaseHand!</label>
 			<nail x="586" y="76"/>
 			<nail x="586" y="76"/>
@@ -48,15 +48,15 @@ bool noone(bool b) { return hasFlashlight == false; }
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="0" y="-42">sideB == 0 and someone(hasFlashlight)</label>
-			<label kind="synchronisation" x="101" y="-59">takehand!</label>
+			<label kind="guard" x="0" y="-42">buddy == 0 and someone(hasFlashlight)</label>
+			<label kind="synchronisation" x="101" y="-59">takeHand!</label>
 			<label kind="assignment" x="118" y="-25">y = 0</label>
 			<nail x="144" y="1"/>
 		</transition>
 		<transition>
 			<source ref="id3"/>
 			<target ref="id0"/>
-			<label kind="guard" x="0" y="85">isOnTheLeft(side) and noone(hasFlashlight)</label>
+			<label kind="guard" x="76" y="85">isOnTheLeft(side)</label>
 			<label kind="synchronisation" x="127" y="51">take!</label>
 			<label kind="assignment" x="0" y="110">y = 0,  hasFlashlight = swap(hasFlashlight)</label>
 			<nail x="382" y="76"/>
@@ -72,12 +72,12 @@ bool noone(bool b) { return hasFlashlight == false; }
 			<target ref="id2"/>
 			<label kind="guard" x="93" y="272">isOnTheRight(side)</label>
 			<label kind="synchronisation" x="145" y="238">take!</label>
-			<label kind="assignment" x="102" y="297">y = 0, sideB =0</label>
+			<label kind="assignment" x="102" y="297">y = 0, buddy =0</label>
 		</transition>
 		<transition>
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="238" y="170">y &gt;= delay and sideB != 1</label>
+			<label kind="guard" x="238" y="170">y &gt;= delay and buddy != 1</label>
 			<label kind="synchronisation" x="297" y="153">release!</label>
 			<label kind="assignment" x="204" y="195">hasFlashlight = swap(hasFlashlight)</label>
 		</transition>
@@ -91,13 +91,13 @@ bool noone(bool b) { return hasFlashlight == false; }
 			<name x="-993" y="-550">free</name>
 		</location>
 		<init ref="id5"/>
-		<transition>
+		<transition color="#ff0000">
 			<source ref="id5"/>
 			<target ref="id4"/>
 			<label kind="synchronisation" x="-841" y="-646">take?</label>
 			<nail x="-824" y="-629"/>
 		</transition>
-		<transition>
+		<transition color="#0000ff">
 			<source ref="id4"/>
 			<target ref="id5"/>
 			<label kind="synchronisation" x="-867" y="-544">release?</label>
@@ -107,23 +107,23 @@ bool noone(bool b) { return hasFlashlight == false; }
 	<template>
 		<name>BuddySystem</name>
 		<location id="id6" x="-960" y="-365">
-			<name x="-977" y="-348">alone</name>
+			<name x="-977" y="-348">one</name>
 		</location>
 		<location id="id7" x="-603" y="-365">
 			<name x="-616" y="-345">two</name>
 		</location>
 		<init ref="id6"/>
-		<transition>
+		<transition color="#0000ff">
 			<source ref="id7"/>
 			<target ref="id6"/>
 			<label kind="synchronisation" x="-833" y="-391">releaseHand?</label>
-			<label kind="assignment" x="-824" y="-357">sideB = 2</label>
+			<label kind="assignment" x="-824" y="-357">buddy = 2</label>
 		</transition>
-		<transition>
+		<transition color="#0000ff">
 			<source ref="id6"/>
 			<target ref="id7"/>
-			<label kind="synchronisation" x="-816" y="-535">takehand?</label>
-			<label kind="assignment" x="-816" y="-467">sideB = 1</label>
+			<label kind="synchronisation" x="-816" y="-535">takeHand?</label>
+			<label kind="assignment" x="-816" y="-467">buddy = 1</label>
 			<nail x="-782" y="-510"/>
 		</transition>
 	</template>
