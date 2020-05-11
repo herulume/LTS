@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.1//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_2.dtd'>
 <nta>
-	<declaration>chan take, release, takehand, releaseHand;
+	<declaration>chan take, release, takeHand, releaseHand;
 
-bool hasFlashlight;
-
-bool side;
-bool buddy;
+bool hasFlashlight, side, buddy;
 
 clock time;	
 
@@ -23,116 +20,113 @@ bool isOnTheRight(bool sid) { return sid == true; }
 
 
 bool someone(bool b) { return b == true; }
-bool noone(bool b) { return b == false; }
 
 </declaration>
 		<location id="id0" x="459" y="76">
 			<name x="442" y="42">ReadytoCross</name>
 		</location>
-		<location id="id1" x="459" y="263">
-			<name x="450" y="280">right</name>
+		<location id="id1" x="459" y="391">
+			<name x="450" y="408">right</name>
 		</location>
-		<location id="id2" x="-153" y="263">
-			<name x="-212" y="289">ReadyToReturn</name>
+		<location id="id2" x="-153" y="391">
+			<name x="-212" y="417">ReadyToReturn</name>
 		</location>
 		<location id="id3" x="-153" y="76">
 			<name x="-161" y="42">left</name>
 		</location>
 		<init ref="id3"/>
-		<transition>
+		<transition color="#0000ff">
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="544" y="178">y &gt;= delay and buddy</label>
-			<label kind="synchronisation" x="552" y="153">releaseHand!</label>
-			<nail x="586" y="76"/>
-			<nail x="586" y="76"/>
+			<label kind="guard" x="561" y="238">y &gt;= delay</label>
+			<label kind="synchronisation" x="561" y="204">releaseHand!</label>
+			<nail x="552" y="229"/>
 		</transition>
-		<transition>
+		<transition color="#0000ff">
 			<source ref="id3"/>
 			<target ref="id0"/>
 			<label kind="guard" x="0" y="-42">isOnTheLeft(side) and someone(hasFlashlight)</label>
-			<label kind="synchronisation" x="101" y="-59">takehand!</label>
+			<label kind="synchronisation" x="101" y="-59">takeHand!</label>
 			<label kind="assignment" x="118" y="-25">y = 0</label>
-			<nail x="144" y="1"/>
+			<nail x="136" y="0"/>
 		</transition>
-		<transition>
+		<transition color="#ff0000">
 			<source ref="id3"/>
 			<target ref="id0"/>
 			<label kind="guard" x="85" y="85">isOnTheLeft(side)</label>
-			<label kind="synchronisation" x="127" y="51">take!</label>
-			<label kind="assignment" x="0" y="110">y = 0,  hasFlashlight = swap(hasFlashlight)</label>
-			<nail x="382" y="76"/>
+			<label kind="synchronisation" x="119" y="68">take!</label>
+			<label kind="assignment" x="8" y="102">y = 0,  hasFlashlight = swap(hasFlashlight)</label>
+			<nail x="144" y="161"/>
 		</transition>
 		<transition>
 			<source ref="id2"/>
 			<target ref="id3"/>
-			<label kind="guard" x="-238" y="178">y &gt;= delay</label>
-			<label kind="synchronisation" x="-229" y="153">release!</label>
+			<label kind="guard" x="-246" y="229">y &gt;= delay</label>
+			<label kind="synchronisation" x="-229" y="204">release!</label>
 		</transition>
 		<transition>
 			<source ref="id1"/>
 			<target ref="id2"/>
-			<label kind="guard" x="93" y="272">isOnTheRight(side)</label>
-			<label kind="synchronisation" x="110" y="238">take!</label>
-			<label kind="assignment" x="102" y="297">y = 0</label>
+			<label kind="guard" x="68" y="399">isOnTheRight(side)</label>
+			<label kind="synchronisation" x="102" y="357">take!</label>
+			<label kind="assignment" x="110" y="416">y = 0</label>
 		</transition>
-		<transition>
+		<transition color="#ff0000">
 			<source ref="id0"/>
 			<target ref="id1"/>
-			<label kind="guard" x="238" y="170">y &gt;= delay and not buddy</label>
-			<label kind="synchronisation" x="297" y="153">release!</label>
-			<label kind="assignment" x="204" y="195">hasFlashlight = swap(hasFlashlight)</label>
+			<label kind="guard" x="212" y="238">y &gt;= delay and not buddy</label>
+			<label kind="synchronisation" x="272" y="212">release!</label>
+			<label kind="assignment" x="153" y="263">hasFlashlight = swap(hasFlashlight)</label>
+			<nail x="391" y="229"/>
 		</transition>
 	</template>
 	<template>
 		<name x="32" y="-16">Flashlight</name>
 		<declaration>
                   </declaration>
-		<location id="id4" x="-1317" y="-858">
-			<name x="-1334" y="-892">held</name>
+		<location id="id4" x="-1122" y="-1487">
+			<name x="-1139" y="-1521">held</name>
 		</location>
-		<location id="id5" x="-1581" y="-858">
-			<name x="-1597" y="-890">free</name>
+		<location id="id5" x="-1691" y="-1479">
+			<name x="-1707" y="-1511">free</name>
 		</location>
-		<location id="id6" x="-1317" y="-748">
-			<name x="-1325" y="-731">two</name>
+		<location id="id6" x="-1122" y="-1173">
+			<name x="-1130" y="-1156">two</name>
 		</location>
-		<location id="id7" x="-1581" y="-748">
+		<location id="id7" x="-1691" y="-1173">
+			<name x="-1708" y="-1155">one</name>
 		</location>
 		<init ref="id5"/>
-		<transition>
-			<source ref="id7"/>
-			<target ref="id5"/>
-			<label kind="synchronisation" x="-1666" y="-816">release?</label>
-			<label kind="assignment" x="-1717" y="-782">side = swap(side)</label>
-		</transition>
-		<transition>
-			<source ref="id6"/>
-			<target ref="id7"/>
-			<label kind="synchronisation" x="-1479" y="-782">releaseHand?</label>
-			<label kind="assignment" x="-1496" y="-739">buddy = swap(buddy)</label>
-		</transition>
-		<transition>
+		<transition color="#0000ff">
 			<source ref="id4"/>
 			<target ref="id6"/>
-			<label kind="synchronisation" x="-1300" y="-824">takehand?</label>
-			<label kind="assignment" x="-1300" y="-799">buddy = swap(buddy)</label>
-			<nail x="-1317" y="-842"/>
-			<nail x="-1317" y="-824"/>
-			<nail x="-1317" y="-765"/>
+			<label kind="synchronisation" x="-1071" y="-1351">takeHand?</label>
+			<label kind="assignment" x="-1113" y="-1334">buddy = swap(buddy)</label>
+		</transition>
+		<transition color="#0000ff">
+			<source ref="id7"/>
+			<target ref="id5"/>
+			<label kind="synchronisation" x="-1802" y="-1360">release?</label>
+			<label kind="assignment" x="-1827" y="-1334">side = swap(side)</label>
+		</transition>
+		<transition color="#0000ff">
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="synchronisation" x="-1462" y="-1164">releaseHand?</label>
+			<label kind="assignment" x="-1487" y="-1139">buddy = swap(buddy)</label>
 		</transition>
 		<transition>
 			<source ref="id5"/>
 			<target ref="id4"/>
-			<label kind="synchronisation" x="-1462" y="-969">take?</label>
-			<nail x="-1445" y="-943"/>
+			<label kind="synchronisation" x="-1428" y="-1581">take?</label>
+			<nail x="-1402" y="-1547"/>
 		</transition>
-		<transition>
+		<transition color="#ff0000">
 			<source ref="id4"/>
 			<target ref="id5"/>
-			<label kind="synchronisation" x="-1470" y="-892">release?</label>
-			<label kind="assignment" x="-1496" y="-850">side = swap(side)</label>
-			<nail x="-1377" y="-858"/>
+			<label kind="synchronisation" x="-1428" y="-1479">release?</label>
+			<label kind="assignment" x="-1462" y="-1462">side = swap(side)</label>
+			<nail x="-1394" y="-1428"/>
 		</transition>
 	</template>
 	<system>TheDoctor = Person(1);
@@ -173,9 +167,7 @@ system TheDoctor, RiverSong, DonnaNoble, RoseTaylor, Flashlight;</system>
 		<query>
 			<formula>E&lt;&gt; TheDoctor.right and RiverSong.right and DonnaNoble.right and RoseTaylor.right and time==17
 			</formula>
-			<comment>Scheduling problem reformulated as reachability formula. Use
-'Diagnostic Trace:Fastest' option to find fastest solution.
-			</comment>
+			<comment>			</comment>
 		</query>
 	</queries>
 </nta>
