@@ -140,34 +140,51 @@ system TheDoctor, RiverSong, DonnaNoble, RoseTaylor, Flashlight;</system>
 		<query>
 			<formula>A[] not deadlock
 			</formula>
-			<comment>The system is deadlock free.
+			<comment>É sempre possível um aventureiro andar a atravessar ponte
+
 			</comment>
 		</query>
 		<query>
-			<formula>E&lt;&gt; TheDoctor.right</formula>
-			<comment>
-			</comment>
+			<formula>A[] not (TheDoctor.right and time&lt;1)</formula>
+			<comment>Um aventureiro não atravessa a ponte em menos tempo do que pode mesmo com outro mais rápido</comment>
+		</query>
+		<query>
+			<formula>A[] not (RiverSong.right and time&lt;2)</formula>
+			<comment>Um aventureiro não atravessa a ponte em menos tempo do que pode mesmo com outro mais rápido</comment>
+		</query>
+		<query>
+			<formula>A[] not (DonnaNoble.right and time&lt;5)</formula>
+			<comment>Um aventureiro não atravessa a ponte em menos tempo do que pode mesmo com outro mais rápido</comment>
 		</query>
 		<query>
 			<formula>A[] not (RoseTaylor.right and time&lt;10)
 			</formula>
-			<comment>
-			</comment>
-		</query>
-		<query>
-			<formula>E&lt;&gt; RoseTaylor.right imply time&gt;=10
-			</formula>
-			<comment>
-			</comment>
+			<comment>Um aventureiro não atravessa a ponte em menos tempo do que pode mesmo com outro mais rápido
+</comment>
 		</query>
 		<query>
 			<formula>E&lt;&gt; TheDoctor.right and RiverSong.right and DonnaNoble.right and RoseTaylor.right and time&lt;17</formula>
-			<comment></comment>
+			<comment>A travessia pode ser feita em menos de 17 minutos</comment>
+		</query>
+		<query>
+			<formula>A[] not ((TheDoctor.ReadyToReturn and RiverSong.ReadyToReturn and DonnaNoble.ReadyToReturn and RoseTaylor.ReadyToReturn) or 
+         (TheDoctor.ReadyToReturn and RiverSong.ReadyToReturn and DonnaNoble.ReadyToReturn) or 
+         (TheDoctor.ReadyToReturn and RiverSong.ReadyToReturn and RoseTaylor.ReadyToReturn) or
+         (RiverSong.ReadyToReturn and DonnaNoble.ReadyToReturn and RoseTaylor.ReadyToReturn))</formula>
+			<comment>A atravessar para o lado esquerdo só podem estar duas pessoas na ponte ao mesmo tempo</comment>
+		</query>
+		<query>
+			<formula>A[] not ((TheDoctor.ReadytoCross and RiverSong.ReadytoCross and DonnaNoble.ReadytoCross and RoseTaylor.ReadytoCross) or 
+         (TheDoctor.ReadytoCross and RiverSong.ReadytoCross and DonnaNoble.ReadytoCross) or 
+         (TheDoctor.ReadytoCross and RiverSong.ReadytoCross and RoseTaylor.ReadytoCross) or
+         (RiverSong.ReadytoCross and DonnaNoble.ReadytoCross and RoseTaylor.ReadytoCross))</formula>
+			<comment>A atravessar para o lado direito só podem estar duas pessoas na ponte ao mesmo tempo
+</comment>
 		</query>
 		<query>
 			<formula>E&lt;&gt; TheDoctor.right and RiverSong.right and DonnaNoble.right and RoseTaylor.right and time==17
 			</formula>
-			<comment>			</comment>
+			<comment>A travessia pode ser feita em 17 minutos</comment>
 		</query>
 	</queries>
 </nta>
