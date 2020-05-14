@@ -1,0 +1,64 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: ff3ee5fb03dd4fc9511552ce59cf3e3c4b6deccffb7b00beb7ea668ffd85f896
+
+name:           Adventures
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/Adventures#readme>
+homepage:       https://github.com/githubuser/Adventures#readme
+bug-reports:    https://github.com/githubuser/Adventures/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2020 Author name here
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/githubuser/Adventures
+
+library
+  exposed-modules:
+      Adventurers
+      DurationMonad
+      Lib
+  other-modules:
+      Paths_Adventures
+  hs-source-dirs:
+      src
+  build-depends:
+      base >=4.7 && <5
+  default-language: Haskell2010
+
+executable Adventures-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_Adventures
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Adventures
+    , base >=4.7 && <5
+  default-language: Haskell2010
+
+test-suite Adventures-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_Adventures
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      Adventures
+    , base >=4.7 && <5
+  default-language: Haskell2010

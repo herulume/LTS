@@ -11,7 +11,10 @@ type Objects = Either Adventurer ()
 -- The time that each adventurer needs to cross the bridge
 -- To implement
 getTimeAdv :: Adventurer -> Int
-getTimeAdv = undefined
+getTimeAdv P1 = 1
+getTimeAdv P2 = 2
+getTimeAdv P5 = 5
+getTimeAdv P10 = 10
 
 {-- The state of the game, i.e. the current position of each adventurer
 + the lantern. The function (const False) represents the initial state
@@ -86,17 +89,21 @@ remLD (LD x) = x
 
 -- To implement
 instance Functor ListDur where
-   fmap f = undefined
+   fmap f =  LD . fmap (fmap f) . remLD
 
 -- To implement
 instance Applicative ListDur where
-   pure x = undefined
-   l1 <*> l2 = undefined
+   pure = LD . pure . pure
+   l1 <*> l2 = LD $ do
+       df <- remLD l1
+       dv <- remLD l2
+       return $ df <*> dv
 
 -- To implement
 instance Monad ListDur where
-   return = undefined
-   l >>= k = undefined
+   return = pure
+   l >>= k = LD $ remLD l >>= (\(Duration (s, x)) ->
+        fmap (\(Duration (s', z)) -> Duration (s + s', z)) (remLD (k x)))
 
 manyChoice :: [ListDur a] -> ListDur a
 manyChoice = LD . concat . (map remLD)
