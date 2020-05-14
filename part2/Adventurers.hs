@@ -9,7 +9,7 @@ data Adventurer = P1 | P2 | P5 | P10 deriving (Show,Eq)
 type Objects = Either Adventurer ()
 
 -- The time that each adventurer needs to cross the bridge
--- To implement 
+-- To implement
 getTimeAdv :: Adventurer -> Int
 getTimeAdv = undefined
 
@@ -45,10 +45,10 @@ gInit = const False
 changeState :: Objects -> State -> State
 changeState a s = let v = s a in (\x -> if x == a then not v else s x)
 
--- Changes the state of the game of a list of objects 
+-- Changes the state of the game of a list of objects
 mChangeState :: [Objects] -> State -> State
 mChangeState os s = foldr changeState s os
-                               
+
 
 {-- For a given state of the game, the function presents all the
 possible moves that the adventurers can make.  --}
@@ -58,7 +58,7 @@ allValidPlays = undefined
 
 {-- For a given number n and initial state, the function calculates
 all possible n-sequences of moves that the adventures can make --}
--- To implement 
+-- To implement
 exec :: Int -> State -> ListDur State
 exec = undefined
 
