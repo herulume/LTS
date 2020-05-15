@@ -2,6 +2,7 @@
 module Adventurers where
 
 import DurationMonad
+import Data.List
 
 -- The list of adventurers
 data Adventurer = P1 | P2 | P5 | P10 deriving (Show,Eq)
@@ -57,13 +58,23 @@ mChangeState os s = foldr changeState s os
 possible moves that the adventurers can make.  --}
 -- To implement
 allValidPlays :: State -> ListDur State
-allValidPlays = undefined
+allValidPlays s = let fLSide = s . Right $ ()
+                      valid = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
+                      pairs l = [(x,y) | (x:ys) <- tails l, y <- ys] ++ [(x, x) | x <- l]
+                   in LD $ do
+                       (p', p'') <- pairs valid
+                       if p' == p'' then return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
+                          else  return $ Duration ( max (getTimeAdv p') (getTimeAdv p'')
+                                                  , mChangeState [Left p', Left p'', Right ()] s
+                                                  )
 
 {-- For a given number n and initial state, the function calculates
 all possible n-sequences of moves that the adventures can make --}
 -- To implement
 exec :: Int -> State -> ListDur State
-exec = undefined
+exec 0 _ = LD []
+exec 1 s = allValidPlays s
+exec n s = allValidPlays s >>= exec (n-1)
 
 {-- Is it possible for all adventurers to be on the other side
 in <=17 min and not exceeding 5 moves ? --}
@@ -76,8 +87,6 @@ in < 17 min ? --}
 -- To implement
 l17 :: Bool
 l17 = undefined
-
-
 --------------------------------------------------------------------------
 {-- Implementation of the monad used for the problem of the adventurers.
 Recall the Knight's quest --}
