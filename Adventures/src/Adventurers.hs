@@ -58,15 +58,16 @@ mChangeState os s = foldr changeState s os
 possible moves that the adventurers can make.  --}
 -- To implement
 allValidPlays :: State -> ListDur State
-allValidPlays s = let fLSide = s . Right $ ()
-                      valid = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
-                      pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
-                   in LD $ do
-                       (p', p'') <- pairs valid
-                       if p' == p'' then return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
-                          else  return $ Duration ( max (getTimeAdv p') (getTimeAdv p'')
-                                                  , mChangeState [Left p', Left p'', Right ()] s
-                                                  )
+allValidPlays s =
+    let fLSide = s . Right $ ()
+        valid = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
+        pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
+     in LD $ do
+         (p', p'') <- pairs valid
+         if p' == p'' then return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
+                      else  return $ Duration ( max (getTimeAdv p') (getTimeAdv p'')
+                                              , mChangeState [Left p', Left p'', Right ()] s
+                                              )
 
 {-- For a given number n and initial state, the function calculates
 all possible n-sequences of moves that the adventures can make --}
@@ -80,13 +81,19 @@ exec n s = allValidPlays s >>= exec (n-1)
 in <=17 min and not exceeding 5 moves ? --}
 -- To implement
 leq17 :: Bool
-leq17 = undefined
+leq17 = allSafeInAnd 5 (<= 17)
 
 {-- Is it possible for all adventurers to be on the other side
 in < 17 min ? --}
 -- To implement
 l17 :: Bool
-l17 = undefined
+l17 = allSafeInAnd 5 (< 17)
+
+allSafeInAnd :: Int -> (Int -> Bool) -> Bool
+allSafeInAnd s f = baseQuery s (any (\x -> all (==True) (getValue x) && f (getDuration x)))
+
+baseQuery :: Int -> ([Duration [Bool]] -> Bool) -> Bool
+baseQuery s f = f . remLD . fmap (flip fmap [Left P1, Left P2, Left P5, Left P10, Right ()]) $ exec s gInit
 --------------------------------------------------------------------------
 {-- Implementation of the monad used for the problem of the adventurers.
 Recall the Knight's quest --}
