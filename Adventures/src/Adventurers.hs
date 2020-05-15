@@ -59,12 +59,12 @@ possible moves that the adventurers can make.  --}
 -- To implement
 allValidPlays :: State -> ListDur State
 allValidPlays s =
-    let fLSide = s . Right $ ()
-        valid = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
+    let fLSide  = s . Right $ ()
+        valid   = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
         pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
      in LD $ do
          (p', p'') <- pairs valid
-         if p' == p'' then return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
+         if p' == p'' then  return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
                       else  return $ Duration ( max (getTimeAdv p') (getTimeAdv p'')
                                               , mChangeState [Left p', Left p'', Right ()] s
                                               )
@@ -92,7 +92,7 @@ l17 = allSafeAnd (< 17)
 {-- Is it possible for any adventurers to be on the other side
 in < their ? --}
 anyLTheirTime :: Bool
-anyLTheirTime = any (\x -> any (\(p', s) -> either (\p -> s &&  getDuration x < getTimeAdv p) (const False) p') (getValue x)) baseQuery
+anyLTheirTime = any (\x -> any (\(p', s) -> either (\p -> s && getDuration x < getTimeAdv p) (const False) p') (getValue x)) baseQuery
 
 allSafeAnd :: (Int -> Bool) -> Bool
 allSafeAnd f = any (\x -> all (==True) (fmap snd (getValue x)) && f (getDuration x)) baseQuery
