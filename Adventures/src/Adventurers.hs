@@ -2,7 +2,7 @@
 module Adventurers where
 
 import DurationMonad
-import Data.List
+import Data.List (tails)
 
 -- The list of adventurers
 data Adventurer = P1 | P2 | P5 | P10 deriving (Show,Eq)
@@ -60,7 +60,7 @@ possible moves that the adventurers can make.  --}
 allValidPlays :: State -> ListDur State
 allValidPlays s = let fLSide = s . Right $ ()
                       valid = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
-                      pairs l = [(x,y) | (x:ys) <- tails l, y <- ys] ++ [(x, x) | x <- l]
+                      pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
                    in LD $ do
                        (p', p'') <- pairs valid
                        if p' == p'' then return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
