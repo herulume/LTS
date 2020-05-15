@@ -81,19 +81,24 @@ exec n s = allValidPlays s >>= exec (n-1)
 in <=17 min and not exceeding 5 moves ? --}
 -- To implement
 leq17 :: Bool
-leq17 = allSafeInAnd 5 (<= 17)
+leq17 = allSafeAnd (<= 17)
 
 {-- Is it possible for all adventurers to be on the other side
 in < 17 min ? --}
 -- To implement
 l17 :: Bool
-l17 = allSafeInAnd 5 (< 17)
+l17 = allSafeAnd (< 17)
 
-allSafeInAnd :: Int -> (Int -> Bool) -> Bool
-allSafeInAnd s f = baseQuery s (any (\x -> all (==True) (getValue x) && f (getDuration x)))
+{-- Is it possible for any adventurers to be on the other side
+in < their ? --}
+anyLTheirTime :: Bool
+anyLTheirTime = any (\x -> any (\(p', s) -> either (\p -> s &&  getDuration x < getTimeAdv p) (const False) p') (getValue x)) baseQuery
 
-baseQuery :: Int -> ([Duration [Bool]] -> Bool) -> Bool
-baseQuery s f = f . remLD . fmap (flip fmap [Left P1, Left P2, Left P5, Left P10, Right ()]) $ exec s gInit
+allSafeAnd :: (Int -> Bool) -> Bool
+allSafeAnd f = any (\x -> all (==True) (fmap snd (getValue x)) && f (getDuration x)) baseQuery
+
+baseQuery :: [Duration [(Objects, Bool)]]
+baseQuery = remLD . fmap (\s -> fmap (\p -> (p, s p)) [Left P1, Left P2, Left P5, Left P10, Right ()]) $ exec 5 gInit
 --------------------------------------------------------------------------
 {-- Implementation of the monad used for the problem of the adventurers.
 Recall the Knight's quest --}
