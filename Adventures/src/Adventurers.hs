@@ -3,6 +3,8 @@ module Adventurers where
 
 import DurationMonad
 import Data.List (tails)
+import Data.Monoid
+import Control.Monad (mapM_)
 
 -- The list of adventurers
 data Adventurer = P1 | P2 | P5 | P10 deriving (Show,Eq)
@@ -81,7 +83,7 @@ exec n s = allValidPlays s >>= exec (n-1)
 in <=17 min and not exceeding 5 moves ? --}
 -- To implement
 leq17 :: Bool
-leq17 = allSafeAnd (<= 17)
+leq17 = allSafeAnd (<=17)
 
 {-- Is it possible for all adventurers to be on the other side
 in < 17 min ? --}
@@ -92,13 +94,38 @@ l17 = allSafeAnd (< 17)
 {-- Is it possible for any adventurers to be on the other side
 in < their ? --}
 anyLTheirTime :: Bool
-anyLTheirTime = any (\x -> any (\(p', s) -> either (\p -> s && getDuration x < getTimeAdv p) (const False) p') (getValue x)) baseQuery
+anyLTheirTime = any (\x -> any (\(p', s) -> either ((s &&) . (getDuration x <) . getTimeAdv) (const False) p') (getValue x)) baseQuery
+
+
+{-- Must pass with flashlight
+--}
+withFlashlight :: Bool
+withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gInit where
+    check :: State -> Bool
+    check s = let os = [Left P1, Left P2, Left P5, Left P10]
+                  fl = Right ()
+                  actual = fmap s os
+                  next = fmap (\(Duration (_, l)) -> (l, fmap l os)) . remLD . allValidPlays $ s
+                  diff = fmap (fmap (getAny . foldMap Any . zipWith (==) actual)) next
+                in foldr (\(f, b) acc-> not b || (((f fl) /= (s fl)) && acc)) True diff
 
 allSafeAnd :: (Int -> Bool) -> Bool
 allSafeAnd f = any (\x -> all (==True) (fmap snd (getValue x)) && f (getDuration x)) baseQuery
 
 baseQuery :: [Duration [(Objects, Bool)]]
 baseQuery = remLD . fmap (\s -> fmap (\p -> (p, s p)) [Left P1, Left P2, Left P5, Left P10, Right ()]) $ exec 5 gInit
+
+allQueries :: IO ()
+allQueries = mapM_ putStrLn
+    [ "Is it possible for all adventurers to be on the other side in <=17 min and not exceeding 5 moves?"
+    , show leq17 <> "\n"
+    , "Is it possible for all adventurers to be on the other side in < 17 min and not exceeding 5 moves?"
+    , show l17 <> "\n"
+    , "Is it possible for any adventurers to be on the other side in < their time ?"
+    , show anyLTheirTime <> "\n"
+    , "They must always pass with the flashlight"
+    ,  show withFlashlight
+    ]
 --------------------------------------------------------------------------
 {-- Implementation of the monad used for the problem of the adventurers.
 Recall the Knight's quest --}
@@ -129,3 +156,26 @@ instance Monad ListDur where
 manyChoice :: [ListDur a] -> ListDur a
 manyChoice = LD . concat . (map remLD)
 --------------------------------------------------------------------------
+{-- Extra
+Here be dragons. And monads. --}
+
+newtype ListDurLog w a = LDL [(w, Duration a)] deriving Show
+
+remLDL :: ListDurLog w a -> [(w, Duration a)]
+remLDL (LDL x) = x
+
+instance Functor (ListDurLog w) where
+   fmap f = LDL . fmap (fmap (fmap f)) . remLDL
+
+instance Monoid w => Applicative (ListDurLog w) where
+   pure x = LDL . pure $ (mempty, pure x)
+   l1 <*> l2 = LDL $ do
+        (w, df) <- remLDL l1
+        (w', f) <- remLDL l2
+        pure (w <> w', df <*> f)
+
+instance Monoid w => Monad (ListDurLog w) where
+   return = pure
+   l >>= k = LDL $ remLDL l >>= (\(w, (Duration (s, x))) ->
+        fmap (\(w', (Duration (s', z))) -> (w <> w', Duration (s + s', z))) (remLDL (k x)))
+
