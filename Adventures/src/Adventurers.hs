@@ -71,34 +71,29 @@ allValidPlays s =
                                               , mChangeState [Left p', Left p'', Right ()] s
                                               )
 
-{-- For a given number n and initial state, the function calculates
-all possible n-sequences of moves that the adventures can make --}
+{-- For a given number n and initial state, the function calculates all possible n-sequences of moves that the adventures can make --}
 -- To implement
 exec :: Int -> State -> ListDur State
 exec 0 _ = LD []
 exec 1 s = allValidPlays s
 exec n s = allValidPlays s >>= exec (n-1)
 
-{-- Is it possible for all adventurers to be on the other side
-in <=17 min and not exceeding 5 moves ? --}
+{-- Is it possible for all adventurers to be on the other side in <=17 min and not exceeding 5 moves ? --}
 -- To implement
 leq17 :: Bool
 leq17 = allSafeAnd (<=17)
 
-{-- Is it possible for all adventurers to be on the other side
-in < 17 min ? --}
+{-- Is it possible for all adventurers to be on the other side in < 17 min ? --}
 -- To implement
 l17 :: Bool
 l17 = allSafeAnd (< 17)
 
-{-- Is it possible for any adventurers to be on the other side
-in < their ? --}
+{-- Is it possible for any adventurers to be on the other side in < their ? --}
 anyLTheirTime :: Bool
 anyLTheirTime = any (\x -> any (\(p', s) -> either ((s &&) . (getDuration x <) . getTimeAdv) (const False) p') (getValue x)) baseQuery
 
 
-{-- Must pass with flashlight
---}
+{-- Must pass with flashlight --}
 withFlashlight :: Bool
 withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gInit where
     check :: State -> Bool
@@ -127,19 +122,14 @@ allQueries = mapM_ putStrLn
     ,  show withFlashlight
     ]
 --------------------------------------------------------------------------
-{-- Implementation of the monad used for the problem of the adventurers.
-Recall the Knight's quest --}
-
 data ListDur a = LD [Duration a] deriving Show
 
 remLD :: ListDur a -> [Duration a]
 remLD (LD x) = x
 
--- To implement
 instance Functor ListDur where
    fmap f =  LD . fmap (fmap f) . remLD
 
--- To implement
 instance Applicative ListDur where
    pure = LD . pure . pure
    l1 <*> l2 = LD $ do
@@ -147,17 +137,15 @@ instance Applicative ListDur where
        dv <- remLD l2
        return $ df <*> dv
 
--- To implement
 instance Monad ListDur where
    return = pure
    l >>= k = LD $ remLD l >>= (\(Duration (s, x)) ->
-        fmap (\(Duration (s', z)) -> Duration (s + s', z)) (remLD (k x)))
+        fmap (\(Duration (s', z)) -> Duration (s + s', z)) . remLD . k $ x)
 
 manyChoice :: [ListDur a] -> ListDur a
 manyChoice = LD . concat . (map remLD)
 --------------------------------------------------------------------------
-{-- Extra
-Here be dragons. And monads. --}
+{-- Extra. Here be dragons. And monads. --}
 
 newtype ListDurLog w a = LDL [(w, Duration a)] deriving Show
 
@@ -177,5 +165,5 @@ instance Monoid w => Applicative (ListDurLog w) where
 instance Monoid w => Monad (ListDurLog w) where
    return = pure
    l >>= k = LDL $ remLDL l >>= (\(w, (Duration (s, x))) ->
-        fmap (\(w', (Duration (s', z))) -> (w <> w', Duration (s + s', z))) (remLDL (k x)))
+        fmap (\(w', (Duration (s', z))) -> (w <> w', Duration (s + s', z))) . remLDL . k $ x)
 
