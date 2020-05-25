@@ -66,10 +66,10 @@ allValidPlays s =
         pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
      in LD $ do
          (p', p'') <- pairs valid
-         if p' == p'' then  return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
-                      else  return $ Duration ( max (getTimeAdv p') (getTimeAdv p'')
-                                              , mChangeState [Left p', Left p'', Right ()] s
-                                              )
+         if p' == p'' then return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
+                      else return $ Duration ( max (getTimeAdv p') (getTimeAdv p'')
+                                             , mChangeState [Left p', Left p'', Right ()] s
+                                             )
 
 {-- For a given number n and initial state, the function calculates all possible n-sequences of moves that the adventures can make --}
 -- To implement
@@ -116,7 +116,7 @@ allQueries = mapM_ putStrLn
     , show leq17 <> "\n"
     , "Is it possible for all adventurers to be on the other side in < 17 min and not exceeding 5 moves?"
     , show l17 <> "\n"
-    , "Is it possible for any adventurers to be on the other side in < their time ?"
+    , "Is it possible for any adventurers to be on the other side in < their time?"
     , show anyLTheirTime <> "\n"
     , "They must always pass with the flashlight"
     ,  show withFlashlight
@@ -167,3 +167,49 @@ instance Monoid w => Monad (ListDurLog w) where
    l >>= k = LDL $ remLDL l >>= (\(w, (Duration (s, x))) ->
         fmap (\(w', (Duration (s', z))) -> (w <> w', Duration (s + s', z))) . remLDL . k $ x)
 
+
+{-- For a given state of the game, the function presents all the
+possible moves that the adventurers can make.  --}
+-- To implement
+allValidPlaysD :: State -> ListDurLog String State
+allValidPlaysD s =
+    let fLSide  = s . Right $ ()
+        valid   = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
+        pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
+     in LDL $ do
+         (p', p'') <- pairs valid
+         if p' == p'' then return ( show p' <> " crossed the bridge >"
+                                  , Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
+                                  )
+                      else return ( show p' <> " and " <> show p'' <> " both crossed the bridge >"
+                                  , Duration ( max (getTimeAdv p') (getTimeAdv p'')
+                                             , mChangeState [Left p', Left p'', Right ()] s
+                                             )
+                                  )
+
+{-- For a given number n and initial state, the function calculates all possible n-sequences of moves that the adventures can make --}
+-- To implement
+execD :: Int -> State -> ListDurLog String State
+execD 0 _ = LDL []
+execD 1 s = allValidPlaysD s
+execD n s = allValidPlaysD s >>= execD (n-1)
+
+getPathN :: Int -> ListDurLog w State -> ListDurLog w [Bool]
+getPathN n = LDL . filter (all (==True) . getValue . snd) . remLDL . fmap (<$> adv) . LDL . filter ((==n) . getDuration . snd) . remLDL
+
+printPath :: Int -> ListDurLog String State -> IO ()
+printPath n l = cond null (const (putStrLn "No path available")) (mapM_ putStrLn . wordsWhen (=='>') . fst . head) . remLDL $ getPathN n l
+
+adv :: [Objects]
+adv = [Left P1, Left P2, Left P5, Left P10, Right ()]
+
+wordsWhen :: (Char -> Bool) -> String -> [String]
+wordsWhen p s =  case dropWhile p s of
+                      "" -> []
+                      s' -> w : wordsWhen p s''
+                            where (w, s'') = break p s'
+
+cond :: (b -> Bool) -> (b -> c) -> (b -> c) -> b -> c
+cond p f g = either f g . grd p where
+  grd :: (a -> Bool) -> a -> Either a a
+  grd pr x = if pr x then Left x else Right x
