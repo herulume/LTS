@@ -155,7 +155,8 @@ remLDL (LDL x) = x
 instance Functor (ListDurLog w) where
    fmap f = LDL . fmap (fmap (fmap f)) . remLDL
 
-{- Functor's laws
+{-
+    Functor's laws
 
     fmap id = id
     { def }
@@ -183,7 +184,8 @@ instance Monoid w => Applicative (ListDurLog w) where
         (w', f) <- remLDL l2
         pure (w <> w', df <*> f)
 
-{-  Monoid's (lax monoidal functor) laws
+{-
+    Monoid's (lax monoidal functor) laws
     pure id <*> v = v  Identity
     pure f <*> pure x = pure (f x) Homomorphism
     u <*> pure y = pure ($ y) <*> u Interchange
@@ -216,9 +218,21 @@ instance Monoid w => Applicative (ListDurLog w) where
 
     Composition
     pure (.) <*> u <*> v <*> w = u <*> (v <*> w)
-
-
-
+    { pure def }
+    LDL [(mempty, (0, (.)))] <*> u <*> v <*> w = u <*> (v <*> w)
+    { <*> def , mempty <> w = w, d + 0 = d  }
+    forall (w', (d', u')) in u => LDL [(w', (d', (u' . )))] <*> v <*> w = u <*> (v <*> w)
+    { <*> def, uap = LDL [(mempty, (0, (.)))] <*> u }
+    forall (w', (d', (u' . ))) in uap, forall (w'', (d'', v')) in v =>  LDL [(w' <> w'', (d'+d'', (u' . v')))] <*> w = u <*> (v <*> w)
+    { <*> def, uvap = LDL [(mempty, (0, (.)))] <*> u <*> v  }
+    forall (w' <> w'', (d'+d'', (u' . v'))) in uvap, forall (w''', (d''', w')) in w => LDL [(w' <> w'' <> w''', (d'+d''+d''', (u' . v') w'))]
+    { (f . g) x = f (g x) }
+    { left  = LDL [(w' <> w'' <> w''', (d'+d''+d''', u' (v' w')))] }
+    { <*> def }
+    forall (w'', (d'', v')) in v, forall (w''', (d''', w')) in w =>  u <*> LDL [(w'' <> w''', (d''+d''', v' w'))]
+    { <*> def, vap = v <*> w }
+    forall (w', (d', u')) in u, forall (w'' <> w''', (d''+d''', v' w')) in vap => LDL [(w' <> w'' <> w''', (d'+d''+d''', u' (v' w')))]
+    { right = LDL [(w' <> w'' <> w''', (d'+d''+d''', u' (v' w')))] = left }
 -}
 
 instance Monoid w => Monad (ListDurLog w) where
