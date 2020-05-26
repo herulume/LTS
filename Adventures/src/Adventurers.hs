@@ -155,7 +155,7 @@ remLDL (LDL x) = x
 instance Functor (ListDurLog w) where
    fmap f = LDL . fmap (fmap (fmap f)) . remLDL
 
-{- Valid functor
+{- Functor's laws
 
     fmap id = id
     { def }
@@ -183,7 +183,7 @@ instance Monoid w => Applicative (ListDurLog w) where
         (w', f) <- remLDL l2
         pure (w <> w', df <*> f)
 
-{-
+{-  Monoid's (lax monoidal functor) laws
     pure id <*> v = v  Identity
     pure f <*> pure x = pure (f x) Homomorphism
     u <*> pure y = pure ($ y) <*> u Interchange
