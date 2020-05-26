@@ -207,6 +207,17 @@ instance Monoid w => Applicative (ListDurLog w) where
     { <*> def, pure def }
     LDL [(mempty, (0, f x))] = LDL [(mempty, (0, f x))]
 
+    Interchange
+    u <*> pure y = pure ($ y) <*> u
+    { pure def x2, ($ y) = \f -> f y }
+    u <*> LDL [(mempty, (0, y))] = LDL [(mempty, (0, (\f -> f y)))] <*> u
+    { <*> def x2, func ap, mempty <> w = w, d + 0 = d  }
+    forall (w, (d, u')) in u => LDL [(w, (d, u' y))] = LDL [(w, (d, u' y)))]
+
+    Composition
+    pure (.) <*> u <*> v <*> w = u <*> (v <*> w)
+
+
 
 -}
 
