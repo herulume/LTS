@@ -202,6 +202,11 @@ instance Monoid w => Applicative (ListDurLog w) where
 
     Homomorphism
     pure f <*> pure x = pure (f x)
+    { pure def x2 }
+    LDL [(mempty, (0, f))] <*> LDL [(mempty, (0, x))] = pure (f x)
+    { <*> def, pure def }
+    LDL [(mempty, (0, f x))] = LDL [(mempty, (0, f x))]
+
 
 -}
 
