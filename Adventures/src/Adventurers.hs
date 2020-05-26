@@ -155,6 +155,27 @@ remLDL (LDL x) = x
 instance Functor (ListDurLog w) where
    fmap f = LDL . fmap (fmap (fmap f)) . remLDL
 
+{- Valid functor
+
+    fmap id = id
+    { def }
+    LDL . fmap (fmap (fmap id)) . remLDL = id
+    { valids fmap }
+    LDL . id . remLDL = id
+    { LDL . remLDL = id, remove id }
+    id = id
+
+    fmap (f . g) ==  fmap f . fmap g
+    { fmap def }
+    fmap (f . g) == LDL . fmap (fmap (fmap f)) . remLDL . LDL . fmap (fmap (fmap g)) . remLDL
+    { LDL . remLDL = id, remove id }
+    fmap (f . g) == LDL . fmap (fmap (fmap f)) . fmap (fmap (fmap g)) . remLD
+    { fmap (f . g) = fmap f . fmap g x3 }
+    fmap (f . g) == LDL . fmap (fmap (fmap f .g)) . remLDL
+    { fmap def }
+    fmap (f . g) == fmap (f . g)
+-}
+
 instance Monoid w => Applicative (ListDurLog w) where
    pure x = LDL . pure $ (mempty, pure x)
    l1 <*> l2 = LDL $ do
@@ -162,15 +183,34 @@ instance Monoid w => Applicative (ListDurLog w) where
         (w', f) <- remLDL l2
         pure (w <> w', df <*> f)
 
+{-
+    pure id <*> v = v  Identity
+    pure f <*> pure x = pure (f x) Homomorphism
+    u <*> pure y = pure ($ y) <*> u Interchange
+    pure (.) <*> u <*> v <*> w = u <*> (v <*> w) Composition
+
+    Identity
+    pure id <*> v = v
+    { pure def x2 }
+    LDL [(mempty, (0, id))] <*> v = v
+    { <*> def x2 }
+    forall (w, (d, v')) in v => LDL [(mempty <> w, (0 + d, id v'))] = v
+    { mempty <> z = z, nat id, 0 + d = d }
+    forall (w, (d, v')) in v => LDL [(w, (d, v')] = v
+    { LDL [(w, (d, v'))] = w }
+    v = v
+
+    Homomorphism
+    pure f <*> pure x = pure (f x)
+
+-}
+
 instance Monoid w => Monad (ListDurLog w) where
    return = pure
    l >>= k = LDL $ remLDL l >>= (\(w, (Duration (s, x))) ->
         fmap (\(w', (Duration (s', z))) -> (w <> w', Duration (s + s', z))) . remLDL . k $ x)
 
 
-{-- For a given state of the game, the function presents all the
-possible moves that the adventurers can make.  --}
--- To implement
 allValidPlaysD :: State -> ListDurLog String State
 allValidPlaysD s =
     let fLSide  = s . Right $ ()
@@ -208,10 +248,11 @@ printPathByTime = cond null (\p -> noPath p >> return err) (\p -> printEachActio
 
 -- Aux stuff
 wordsWhen :: (Char -> Bool) -> String -> [String]
-wordsWhen p s =  case dropWhile p s of
-                      "" -> []
-                      s' -> w : wordsWhen p s''
-                            where (w, s'') = break p s'
+wordsWhen p s =
+    case dropWhile p s of
+        "" -> []
+        s' -> w : wordsWhen p s'' where
+                (w, s'') = break p s'
 
 cond :: (b -> Bool) -> (b -> c) -> (b -> c) -> b -> c
 cond p f g = either f g . grd p where
