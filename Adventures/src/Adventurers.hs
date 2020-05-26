@@ -187,22 +187,25 @@ allValidPlaysD s =
                                              )
                                   )
 
-{-- For a given number n and initial state, the function calculates all possible n-sequences of moves that the adventures can make --}
--- To implement
 execD :: Int -> State -> ListDurLog String State
 execD 0 _ = LDL []
 execD 1 s = allValidPlaysD s
 execD n s = allValidPlaysD s >>= execD (n-1)
 
 getPathN :: Int -> ListDurLog w State -> ListDurLog w [Bool]
-getPathN n = LDL . filter (all (==True) . getValue . snd) . remLDL . fmap (<$> adv) . LDL . filter ((==n) . getDuration . snd) . remLDL
+getPathN n = filterAllCrossed . applyStateChange . filterByDuration n where
+    filterByDuration x = LDL . filter ((==x) . getDuration . snd) . remLDL
+    applyStateChange = fmap (<$> adv)
+    filterAllCrossed = LDL . filter (all (==True) . getValue . snd) . remLDL
 
-printPath :: Int -> ListDurLog String State -> IO ()
-printPath n l = cond null (const (putStrLn "No path available")) (mapM_ putStrLn . wordsWhen (=='>') . fst . head) . remLDL $ getPathN n l
+printPathByTime :: Int -> ListDurLog String State -> IO ()
+printPathByTime = (cond null noPath  printEachAction) ... getPaths where
+        getPaths = remLDL ... getPathN
+        noPath = const $ putStrLn "No path available"
+        printEachAction = mapM_ putStrLn . wordsWhen (=='>') . fst . head
 
-adv :: [Objects]
-adv = [Left P1, Left P2, Left P5, Left P10, Right ()]
 
+-- Aux stuff
 wordsWhen :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =  case dropWhile p s of
                       "" -> []
@@ -213,3 +216,9 @@ cond :: (b -> Bool) -> (b -> c) -> (b -> c) -> b -> c
 cond p f g = either f g . grd p where
   grd :: (a -> Bool) -> a -> Either a a
   grd pr x = if pr x then Left x else Right x
+
+-- black bird
+(...) = (.) . (.)
+
+adv :: [Objects]
+adv = [Left P1, Left P2, Left P5, Left P10, Right ()]
