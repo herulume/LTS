@@ -2,7 +2,7 @@
 module Adventurers where
 
 import DurationMonad
-import Data.List (tails)
+import Data.List (tails, intersperse)
 import Data.Monoid
 import Control.Monad (mapM_)
 
@@ -178,10 +178,10 @@ allValidPlaysD s =
         pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
      in LDL $ do
          (p', p'') <- pairs valid
-         if p' == p'' then return ( show p' <> " crossed the bridge >"
+         if p' == p'' then return ( backOrForth s (Left p') (show p' <> " ")
                                   , Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
                                   )
-                      else return ( show p' <> " and " <> show p'' <> " both crossed the bridge >"
+                      else return ( backOrForth s (Left p') (show p' <> " and " <> show p'' <> " both ")
                                   , Duration ( max (getTimeAdv p') (getTimeAdv p'')
                                              , mChangeState [Left p', Left p'', Right ()] s
                                              )
@@ -198,11 +198,12 @@ getPathN n = filterAllCrossed . applyStateChange . filterByDuration n where
     applyStateChange = fmap (<$> adv)
     filterAllCrossed = LDL . filter (all (==True) . getValue . snd) . remLDL
 
-printPathByTime :: Int -> ListDurLog String State -> IO ()
-printPathByTime = (cond null noPath  printEachAction) ... getPaths where
+printPathByTime :: Int -> ListDurLog String State -> IO String
+printPathByTime = cond null (\p -> noPath p >> return err) (\p -> printEachAction p >> return []) ... getPaths where
         getPaths = remLDL ... getPathN
         noPath = const $ putStrLn "No path available"
         printEachAction = mapM_ putStrLn . wordsWhen (=='>') . fst . head
+        err = "No path available"
 
 
 -- Aux stuff
@@ -217,8 +218,20 @@ cond p f g = either f g . grd p where
   grd :: (a -> Bool) -> a -> Either a a
   grd pr x = if pr x then Left x else Right x
 
+backOrForth :: State -> Objects -> (String -> String)
+backOrForth s p = if s p then (<> "crossed back the bridge >") else (<> "crossed the bridge >")
+
 -- black bird
 (...) = (.) . (.)
 
 adv :: [Objects]
 adv = [Left P1, Left P2, Left P5, Left P10, Right ()]
+
+run :: [Int] -> [Int] -> IO ()
+run times moves = do
+    allQueries
+    putStrLn ""
+    let sucess t0 m0 = putStrLn $ "All in " <> show t0 <> " minutes and " <> show m0 <> " step(s)"
+    let err t0 m0 = putStrLn $ " (For " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
+    let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s -> if null s then sucess t m else err t m))
+    sequence_ . intersperse (putStrLn "") $ s times moves
