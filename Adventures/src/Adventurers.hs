@@ -197,7 +197,7 @@ instance Monoid w => Applicative (ListDurLog w) where
     forall (w, (d, v')) in v => LDL [(mempty <> w, (0 + d, id v'))] = v
     { mempty <> z = z, nat id, 0 + d = d }
     forall (w, (d, v')) in v => LDL [(w, (d, v')] = v
-    { LDL [(w, (d, v'))] = w }
+    { LDL [(w, (d, v'))] = v }
     v = v
 
     Homomorphism
