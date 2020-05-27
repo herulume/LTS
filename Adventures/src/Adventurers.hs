@@ -81,7 +81,7 @@ exec n s = allValidPlays s >>= exec (n-1)
 {-- Is it possible for all adventurers to be on the other side in <=17 min and not exceeding 5 moves ? --}
 -- To implement
 leq17 :: Bool
-leq17 = allSafeAnd (<=17)
+leq17 = allSafeAnd (<= 17)
 
 {-- Is it possible for all adventurers to be on the other side in < 17 min ? --}
 -- To implement
@@ -108,7 +108,7 @@ allSafeAnd :: (Int -> Bool) -> Bool
 allSafeAnd f = any (\x -> all (==True) (fmap snd (getValue x)) && f (getDuration x)) baseQuery
 
 baseQuery :: [Duration [(Objects, Bool)]]
-baseQuery = remLD . fmap (\s -> fmap (\p -> (p, s p)) [Left P1, Left P2, Left P5, Left P10, Right ()]) $ exec 5 gInit
+baseQuery = remLD . fmap (\s -> fmap (\p -> (p, s p)) adv) $ exec 5 gInit
 
 allQueries :: IO ()
 allQueries = mapM_ putStrLn
@@ -246,6 +246,7 @@ allValidPlaysD s =
     let fLSide  = s . Right $ ()
         valid   = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
         pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
+        backOrForth s0 p = if s0 p then (<> "crossed back the bridge >") else (<> "crossed the bridge >")
      in LDL $ do
          (p', p'') <- pairs valid
          if p' == p'' then return ( backOrForth s (Left p') (show p' <> " ")
@@ -269,14 +270,15 @@ getPathN n = filterAllCrossed . applyStateChange . filterByDuration n where
     filterAllCrossed = LDL . filter (all (==True) . getValue . snd) . remLDL
 
 printPathByTime :: Int -> ListDurLog String State -> IO String
-printPathByTime = cond null (\p -> noPath p >> return err) (\p -> printEachAction p >> return []) ... getPaths where
+printPathByTime = cond null noPath printEachAction ... getPaths where
         getPaths = remLDL ... getPathN
-        noPath = const $ putStrLn "No path available"
-        printEachAction = mapM_ putStrLn . wordsWhen (=='>') . fst . head
+        noPath _ = putStrLn err >> return err
+        printEachAction p = (mapM_ putStrLn . wordsWhen (=='>') . fst . head) p >> return []
         err = "No path available"
 
-
+--------------------------------------------------------------------------------
 -- Aux stuff
+
 wordsWhen :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =
     case dropWhile p s of
@@ -288,9 +290,6 @@ cond :: (b -> Bool) -> (b -> c) -> (b -> c) -> b -> c
 cond p f g = either f g . grd p where
   grd :: (a -> Bool) -> a -> Either a a
   grd pr x = if pr x then Left x else Right x
-
-backOrForth :: State -> Objects -> (String -> String)
-backOrForth s p = if s p then (<> "crossed back the bridge >") else (<> "crossed the bridge >")
 
 -- black bird
 (...) = (.) . (.)
