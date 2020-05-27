@@ -112,13 +112,13 @@ baseQuery = remLD . fmap (\s -> fmap (\p -> (p, s p)) adv) $ exec 5 gInit
 
 allQueries :: IO ()
 allQueries = mapM_ putStrLn
-    [ "Is it possible for all adventurers to be on the other side in <=17 min and not exceeding 5 moves?"
+    [ "Is it possible for all adventurers to be on the other side in <=17 minutes and not exceeding 5 moves?"
     , show leq17 <> "\n"
-    , "Is it possible for all adventurers to be on the other side in < 17 min and not exceeding 5 moves?"
+    , "Is it possible for all adventurers to be on the other side in < 17 minutes and not exceeding 5 moves?"
     , show l17 <> "\n"
-    , "Is it possible for any adventurers to be on the other side in < their time?"
+    , "Is it possible for any adventurers to be on the other side in < their own time?"
     , show anyLTheirTime <> "\n"
-    , "They must always pass with the flashlight"
+    , "Any adventurer must always pass with the flashlight"
     ,  show withFlashlight
     ]
 --------------------------------------------------------------------------
@@ -301,7 +301,7 @@ run :: [Int] -> [Int] -> IO ()
 run times moves = do
     allQueries
     putStrLn ""
-    let sucess t0 m0 = putStrLn $ "All in " <> show t0 <> " minutes and " <> show m0 <> " step(s)"
+    let sucess t0 m0 = putStrLn $ " (All in " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let err t0 m0 = putStrLn $ " (For " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s -> if null s then sucess t m else err t m))
     sequence_ . intersperse (putStrLn "") $ s times moves
