@@ -2,7 +2,7 @@
 module Adventurers where
 
 import DurationMonad
-import Data.List (tails, intersperse)
+import Data.List (tails, intersperse, foldl')
 import Data.Monoid
 import Control.Monad (mapM_)
 
@@ -305,3 +305,37 @@ run times moves = do
     let err t0 m0 = putStrLn $ " (For " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s -> if null s then sucess t m else err t m))
     sequence_ . intersperse (putStrLn "") $ s times moves
+
+
+
+interface :: IO ()
+interface = loop gInit 0
+
+loop :: State -> Int -> IO ()
+loop s time = do
+    putStr "\ESC[2J"
+    putStrLn $ "Time elapsed: " <> show time <> " minute(s)"
+    putStrLn "\n"
+    ppState s
+    putStrLn ""
+    let plays = remLDL . allValidPlaysD $ s
+    putStrLn "Possible actions: "
+    mapM_ (\(t, n) -> putStrLn (t <> " " <> show n)) . fst . foldl' (\(acc, n) (w, _) -> ((w, n):acc, n+1)) ([], 0) $ plays
+    putStr "> "
+    choice <- read <$> getLine
+    if choice `elem` [0..(length plays)-1]
+       then do
+           let (w, (Duration (d, s'))) = plays !! choice
+           putStrLn w
+           loop s' (d+time)
+       else loop s time
+
+
+ppState :: State -> IO ()
+ppState s = do
+    let (left, right) = foldr (\(p, b) (l, r) -> if b then (l, p:r) else (p:l, r)) ([], []) . fmap (\p -> (p, s p)) $ adv
+    let ppSide = cond null (const (putStr "{}")) (mapM_ (putStr . either (\p -> show p <> " ") (const "Flashlight ")))
+    ppSide left
+    putStr " #----------# "
+    ppSide right
+    putStrLn ""
