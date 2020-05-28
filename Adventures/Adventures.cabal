@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ff3ee5fb03dd4fc9511552ce59cf3e3c4b6deccffb7b00beb7ea668ffd85f896
+-- hash: ce6d9e9c2dac9bda0212d430659bbefad1d729ca37af3e13ef7618d0aa00d3d4
 
 name:           Adventures
 version:        0.1.0.0
@@ -29,7 +29,6 @@ library
   exposed-modules:
       Adventurers
       DurationMonad
-      Lib
   other-modules:
       Paths_Adventures
   hs-source-dirs:

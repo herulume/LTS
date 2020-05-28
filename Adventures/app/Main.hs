@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Adventurers
 
 main :: IO ()
-main = someFunc
+main = interface

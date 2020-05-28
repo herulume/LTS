@@ -187,10 +187,10 @@ getPathN n = filterAllCrossed . applyStateChange . filterByDuration n where
 
 printPathByTime :: Int -> ListDurLog String State -> IO String
 printPathByTime = cond null noPath printEachAction ... getPaths where
-        getPaths = remLDL ... getPathN
-        noPath _ = putStrLn err >> return err
-        printEachAction p = (mapM_ putStrLn . wordsWhen (=='>') . fst . head) p >> return []
-        err = "No path available"
+    getPaths = remLDL ... getPathN
+    noPath _ = putStrLn err >> return err
+    printEachAction p = (mapM_ putStrLn . wordsWhen (=='>') . fst . head) p >> return []
+    err = "No path available"
 
 --------------------------------------------------------------------------------
 -- IO
@@ -219,10 +219,10 @@ run times moves = do
 
 
 interface :: IO ()
-interface = loop gInit 0 0 "" 1
+interface = loop gInit 0 0 "" 1 []
 
-loop :: State -> Int -> Int -> String -> Int -> IO ()
-loop s time acts log nlOrl= do
+loop :: State -> Int -> Int -> String -> Int -> [(String, State, Int)] -> IO ()
+loop s time acts log nlOrl past = do
     putStr "\ESC[2J"
     putStrLn $ "Time elapsed: " <> show time <> " minute(s)"
     putStr $ "Actions taken (" <> show acts <> "):\n" <> log
@@ -231,9 +231,11 @@ loop s time acts log nlOrl= do
     putStrLn ""
 
     let plays = remLDL . allValidPlaysD $ s
+    let actions = fst . foldl' (\(acc, n) (w, _) -> ((w, n):acc, n+1)) ([], 0) $ plays
     putStrLn "Possible actions: "
-    mapM_ (\(t, n) -> putStrLn (t <> " Press " <> show n)) . fst . foldl' (\(acc, n) (w, _) -> ((w, n):acc, n+1)) ([], 0) $ plays
-    putStr "> "
+    if null past then return () else putStrLn "Go back to previous state > Press -1"
+    mapM_ (\(t, n) -> putStrLn (t <> " Press " <> show n)) actions
+    putStrLn "Action> "
     choice <- read <$> getLine
 
     if choice `elem` [0..(length plays)-1]
@@ -241,8 +243,13 @@ loop s time acts log nlOrl= do
            let (w, (Duration (d, s'))) = plays !! choice
            putStrLn w
            let newLog = if nlOrl == 3 then log <> " " <> w <> "\n" else log <> " " <> w
-           loop s' (d+time) (acts+1) newLog ((nlOrl `mod` 3) + 1)
-       else loop s time acts log nlOrl
+           loop s' (d+time) (acts+1) newLog ((nlOrl `mod` 3) + 1) ((log, s, time):past)
+       else if choice == (-1)
+                then if null past
+                        then loop s time acts log nlOrl past
+                        else (\(log0, s0, d0) -> loop s0 d0 (acts-1) log0 ((nlOrl `mod` 3) - 1) (tail past)) . head $ past
+                else loop s time acts log nlOrl past
+
 
 
 ppState :: State -> IO ()
