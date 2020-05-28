@@ -2,9 +2,9 @@
 module Adventurers where
 
 import DurationMonad
-import Data.List (tails, intersperse, foldl')
+import Data.List
 import Data.Monoid
-import Control.Monad (mapM_)
+import Control.Monad
 
 -- The list of adventurers
 data Adventurer = P1 | P2 | P5 | P10 deriving (Show,Eq)
@@ -214,8 +214,8 @@ run times moves = do
     let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s -> if null s then sucess t m else err t m))
 
     allQueries
-    putStrLn ""
-    sequence_ . intersperse (putStrLn "") $ s times moves
+    newLine
+    sequence_ . intersperse newLine $ s times moves
 
 
 interface :: IO ()
@@ -223,33 +223,32 @@ interface = loop gInit 0 0 "" 1 []
 
 loop :: State -> Int -> Int -> String -> Int -> [(String, State, Int)] -> IO ()
 loop s time acts log nlOrl past = do
-    putStr "\ESC[2J"
+    clear
     putStrLn $ "Time elapsed: " <> show time <> " minute(s)"
     putStr $ "Actions taken (" <> show acts <> "):\n" <> log
     putStrLn "\nSystem:"
     ppState s
-    putStrLn ""
+    newLine
 
     let plays = remLDL . allValidPlaysD $ s
     let actions = fst . foldl' (\(acc, n) (w, _) -> ((w, n):acc, n+1)) ([], 0) $ plays
     putStrLn "Possible actions: "
     if null past then return () else putStrLn "Go back to previous state > Press -1"
     mapM_ (\(t, n) -> putStrLn (t <> " Press " <> show n)) actions
-    putStrLn "Action> "
+    putStrLn "Action (99 to exit)> "
     choice <- read <$> getLine
+    chooseNextScreen choice s time acts log nlOrl past plays
 
-    if choice `elem` [0..(length plays)-1]
-       then do
+chooseNextScreen :: Int -> State -> Int -> Int -> String -> Int -> [(String, State, Int)] -> [(String, Duration State)] -> IO ()
+chooseNextScreen (-1) s time acts log nlOrl [] _         = loop s time acts log nlOrl []
+chooseNextScreen (-1) _ _ acts _ nlOrl (p:ps) _          = (\(log0, s0, d0) -> loop s0 d0 (acts-1) log0 ((nlOrl `mod` 3) - 1) ps) p
+chooseNextScreen choice s time acts log nlOrl past plays | choice `elem` [0..(length plays)-1] = do
            let (w, (Duration (d, s'))) = plays !! choice
            putStrLn w
            let newLog = if nlOrl == 3 then log <> " " <> w <> "\n" else log <> " " <> w
            loop s' (d+time) (acts+1) newLog ((nlOrl `mod` 3) + 1) ((log, s, time):past)
-       else if choice == (-1)
-                then if null past
-                        then loop s time acts log nlOrl past
-                        else (\(log0, s0, d0) -> loop s0 d0 (acts-1) log0 ((nlOrl `mod` 3) - 1) (tail past)) . head $ past
-                else loop s time acts log nlOrl past
-
+                                                         | choice == 99 = clear >> putStrLn "Bye! :D"
+                                                         | otherwise =  loop s time acts log nlOrl past
 
 
 ppState :: State -> IO ()
@@ -260,10 +259,16 @@ ppState s = do
     ppSide left
     putStr " :#><><><><><><><><><><#: "
     ppSide right
-    putStrLn ""
+    newLine
 
 --------------------------------------------------------------------------------
 -- Aux stuff
+clear :: IO ()
+clear = putStr "\ESC[2J"
+
+newLine :: IO ()
+newLine = putStrLn ""
+
 wordsWhen :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =
     case dropWhile p s of

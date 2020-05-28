@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ce6d9e9c2dac9bda0212d430659bbefad1d729ca37af3e13ef7618d0aa00d3d4
+-- hash: 18d1cf8b50e4fe9d6c2f7f86c2094eb3cd3393eb2ebf91fc839385961888e1d1
 
 name:           Adventures
 version:        0.1.0.0
@@ -43,7 +43,7 @@ executable Adventures-exe
       Paths_Adventures
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -Wall
   build-depends:
       Adventures
     , base >=4.7 && <5
