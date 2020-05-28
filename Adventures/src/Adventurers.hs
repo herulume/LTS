@@ -250,7 +250,6 @@ chooseNextScreen choice s time acts log nlOrl past plays | choice `elem` [0..(le
                                                          | choice == 99 = clear >> putStrLn "Bye! :D"
                                                          | otherwise =  loop s time acts log nlOrl past
 
-
 ppState :: State -> IO ()
 ppState s = do
     let (left, right) = foldr (\(p, b) (l, r) -> if b then (l, p:r) else (p:l, r)) ([], []) . fmap (\p -> (p, s p)) $ adv
@@ -282,6 +281,7 @@ cond p f g = either f g . grd p where
   grd pr x = if pr x then Left x else Right x
 
 -- black bird
+(...) :: (c -> d) -> (a -> b -> c) -> a -> b -> d
 (...) = (.) . (.)
 
 adv :: [Objects]
