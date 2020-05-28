@@ -92,7 +92,6 @@ l17 = allSafeAnd (< 17)
 anyLTheirTime :: Bool
 anyLTheirTime = any (\x -> any (\(p', s) -> either ((s &&) . (getDuration x <) . getTimeAdv) (const False) p') (getValue x)) baseQuery
 
-
 {-- Must pass with flashlight --}
 withFlashlight :: Bool
 withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gInit where
@@ -110,17 +109,6 @@ allSafeAnd f = any (\x -> all (==True) (fmap snd (getValue x)) && f (getDuration
 baseQuery :: [Duration [(Objects, Bool)]]
 baseQuery = remLD . fmap (\s -> fmap (\p -> (p, s p)) adv) $ exec 5 gInit
 
-allQueries :: IO ()
-allQueries = mapM_ putStrLn
-    [ "Is it possible for all adventurers to be on the other side in <=17 minutes and not exceeding 5 moves?"
-    , show leq17 <> "\n"
-    , "Is it possible for all adventurers to be on the other side in < 17 minutes and not exceeding 5 moves?"
-    , show l17 <> "\n"
-    , "Is it possible for any adventurers to be on the other side in < their own time?"
-    , show anyLTheirTime <> "\n"
-    , "Any adventurer must always pass with the flashlight"
-    ,  show withFlashlight
-    ]
 --------------------------------------------------------------------------
 data ListDur a = LD [Duration a] deriving Show
 
@@ -144,8 +132,9 @@ instance Monad ListDur where
 
 manyChoice :: [ListDur a] -> ListDur a
 manyChoice = LD . concat . (map remLD)
---------------------------------------------------------------------------
-{-- Extra. Here be dragons. And monads. --}
+
+--------------------------------------------------------------------------------
+-- Extra
 
 newtype ListDurLog w a = LDL [(w, Duration a)] deriving Show
 
@@ -155,85 +144,12 @@ remLDL (LDL x) = x
 instance Functor (ListDurLog w) where
    fmap f = LDL . fmap (fmap (fmap f)) . remLDL
 
-{-
-    Functor's laws
-
-    fmap id = id
-    { def }
-    LDL . fmap (fmap (fmap id)) . remLDL = id
-    { valids fmap }
-    LDL . id . remLDL = id
-    { LDL . remLDL = id, remove id }
-    id = id
-
-    fmap (f . g) ==  fmap f . fmap g
-    { fmap def }
-    fmap (f . g) == LDL . fmap (fmap (fmap f)) . remLDL . LDL . fmap (fmap (fmap g)) . remLDL
-    { LDL . remLDL = id, remove id }
-    fmap (f . g) == LDL . fmap (fmap (fmap f)) . fmap (fmap (fmap g)) . remLD
-    { fmap (f . g) = fmap f . fmap g x3 }
-    fmap (f . g) == LDL . fmap (fmap (fmap f .g)) . remLDL
-    { fmap def }
-    fmap (f . g) == fmap (f . g)
--}
-
 instance Monoid w => Applicative (ListDurLog w) where
    pure x = LDL . pure $ (mempty, pure x)
    l1 <*> l2 = LDL $ do
         (w, df) <- remLDL l1
         (w', f) <- remLDL l2
         pure (w <> w', df <*> f)
-
-{-
-    Monoid's (lax monoidal functor) laws
-    pure id <*> v = v  Identity
-    pure f <*> pure x = pure (f x) Homomorphism
-    u <*> pure y = pure ($ y) <*> u Interchange
-    pure (.) <*> u <*> v <*> w = u <*> (v <*> w) Composition
-
-    Identity
-    pure id <*> v = v
-    { pure def x2 }
-    LDL [(mempty, (0, id))] <*> v = v
-    { <*> def x2 }
-    forall (w, (d, v')) in v => LDL [(mempty <> w, (0 + d, id v'))] = v
-    { mempty <> z = z, nat id, 0 + d = d }
-    forall (w, (d, v')) in v => LDL [(w, (d, v')] = v
-    { LDL [(w, (d, v'))] = v }
-    v = v
-
-    Homomorphism
-    pure f <*> pure x = pure (f x)
-    { pure def x2 }
-    LDL [(mempty, (0, f))] <*> LDL [(mempty, (0, x))] = pure (f x)
-    { <*> def, pure def }
-    LDL [(mempty, (0, f x))] = LDL [(mempty, (0, f x))]
-
-    Interchange
-    u <*> pure y = pure ($ y) <*> u
-    { pure def x2, ($ y) = \f -> f y }
-    u <*> LDL [(mempty, (0, y))] = LDL [(mempty, (0, (\f -> f y)))] <*> u
-    { <*> def x2, func ap, mempty <> w = w, d + 0 = d  }
-    forall (w, (d, u')) in u => LDL [(w, (d, u' y))] = LDL [(w, (d, u' y)))]
-
-    Composition
-    pure (.) <*> u <*> v <*> w = u <*> (v <*> w)
-    { pure def }
-    LDL [(mempty, (0, (.)))] <*> u <*> v <*> w = u <*> (v <*> w)
-    { <*> def , mempty <> w = w, d + 0 = d  }
-    forall (w', (d', u')) in u => LDL [(w', (d', (u' . )))] <*> v <*> w = u <*> (v <*> w)
-    { <*> def, uap = LDL [(mempty, (0, (.)))] <*> u }
-    forall (w', (d', (u' . ))) in uap, forall (w'', (d'', v')) in v =>  LDL [(w' <> w'', (d'+d'', (u' . v')))] <*> w = u <*> (v <*> w)
-    { <*> def, uvap = LDL [(mempty, (0, (.)))] <*> u <*> v  }
-    forall (w' <> w'', (d'+d'', (u' . v'))) in uvap, forall (w''', (d''', w')) in w => LDL [(w' <> w'' <> w''', (d'+d''+d''', (u' . v') w'))]
-    { (f . g) x = f (g x) }
-    { left  = LDL [(w' <> w'' <> w''', (d'+d''+d''', u' (v' w')))] }
-    { <*> def }
-    forall (w'', (d'', v')) in v, forall (w''', (d''', w')) in w =>  u <*> LDL [(w'' <> w''', (d''+d''', v' w'))]
-    { <*> def, vap = v <*> w }
-    forall (w', (d', u')) in u, forall (w'' <> w''', (d''+d''', v' w')) in vap => LDL [(w' <> w'' <> w''', (d'+d''+d''', u' (v' w')))]
-    { right = LDL [(w' <> w'' <> w''', (d'+d''+d''', u' (v' w')))] = left }
--}
 
 instance Monoid w => Monad (ListDurLog w) where
    return = pure
@@ -277,8 +193,70 @@ printPathByTime = cond null noPath printEachAction ... getPaths where
         err = "No path available"
 
 --------------------------------------------------------------------------------
--- Aux stuff
+-- IO
 
+allQueries :: IO ()
+allQueries = mapM_ putStrLn
+    [ "Is it possible for all adventurers to be on the other side in <=17 minutes and not exceeding 5 moves?"
+    , show leq17 <> "\n"
+    , "Is it possible for all adventurers to be on the other side in < 17 minutes and not exceeding 5 moves?"
+    , show l17 <> "\n"
+    , "Is it possible for any adventurers to be on the other side in < their own time?"
+    , show anyLTheirTime <> "\n"
+    , "Any adventurer must always pass with the flashlight"
+    ,  show withFlashlight
+    ]
+
+run :: [Int] -> [Int] -> IO ()
+run times moves = do
+    let sucess t0 m0 = putStrLn $ " (All in " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
+    let err t0 m0 = putStrLn $ " (For " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
+    let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s -> if null s then sucess t m else err t m))
+
+    allQueries
+    putStrLn ""
+    sequence_ . intersperse (putStrLn "") $ s times moves
+
+
+interface :: IO ()
+interface = loop gInit 0 0 "" 1
+
+loop :: State -> Int -> Int -> String -> Int -> IO ()
+loop s time acts log nlOrl= do
+    putStr "\ESC[2J"
+    putStrLn $ "Time elapsed: " <> show time <> " minute(s)"
+    putStr $ "Actions taken (" <> show acts <> "):\n" <> log
+    putStrLn "\nSystem:"
+    ppState s
+    putStrLn ""
+
+    let plays = remLDL . allValidPlaysD $ s
+    putStrLn "Possible actions: "
+    mapM_ (\(t, n) -> putStrLn (t <> " Press " <> show n)) . fst . foldl' (\(acc, n) (w, _) -> ((w, n):acc, n+1)) ([], 0) $ plays
+    putStr "> "
+    choice <- read <$> getLine
+
+    if choice `elem` [0..(length plays)-1]
+       then do
+           let (w, (Duration (d, s'))) = plays !! choice
+           putStrLn w
+           let newLog = if nlOrl == 3 then log <> " " <> w <> "\n" else log <> " " <> w
+           loop s' (d+time) (acts+1) newLog ((nlOrl `mod` 3) + 1)
+       else loop s time acts log nlOrl
+
+
+ppState :: State -> IO ()
+ppState s = do
+    let (left, right) = foldr (\(p, b) (l, r) -> if b then (l, p:r) else (p:l, r)) ([], []) . fmap (\p -> (p, s p)) $ adv
+    let ppSide = cond null (const (putStr "{}")) (mapM_ (putStr . either (\p -> show p <> " ") (const "Flashlight ")))
+
+    ppSide left
+    putStr " :#><><><><><><><><><><#: "
+    ppSide right
+    putStrLn ""
+
+--------------------------------------------------------------------------------
+-- Aux stuff
 wordsWhen :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =
     case dropWhile p s of
@@ -296,46 +274,3 @@ cond p f g = either f g . grd p where
 
 adv :: [Objects]
 adv = [Left P1, Left P2, Left P5, Left P10, Right ()]
-
-run :: [Int] -> [Int] -> IO ()
-run times moves = do
-    allQueries
-    putStrLn ""
-    let sucess t0 m0 = putStrLn $ " (All in " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
-    let err t0 m0 = putStrLn $ " (For " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
-    let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s -> if null s then sucess t m else err t m))
-    sequence_ . intersperse (putStrLn "") $ s times moves
-
-
-
-interface :: IO ()
-interface = loop gInit 0
-
-loop :: State -> Int -> IO ()
-loop s time = do
-    putStr "\ESC[2J"
-    putStrLn $ "Time elapsed: " <> show time <> " minute(s)"
-    putStrLn "\n"
-    ppState s
-    putStrLn ""
-    let plays = remLDL . allValidPlaysD $ s
-    putStrLn "Possible actions: "
-    mapM_ (\(t, n) -> putStrLn (t <> " " <> show n)) . fst . foldl' (\(acc, n) (w, _) -> ((w, n):acc, n+1)) ([], 0) $ plays
-    putStr "> "
-    choice <- read <$> getLine
-    if choice `elem` [0..(length plays)-1]
-       then do
-           let (w, (Duration (d, s'))) = plays !! choice
-           putStrLn w
-           loop s' (d+time)
-       else loop s time
-
-
-ppState :: State -> IO ()
-ppState s = do
-    let (left, right) = foldr (\(p, b) (l, r) -> if b then (l, p:r) else (p:l, r)) ([], []) . fmap (\p -> (p, s p)) $ adv
-    let ppSide = cond null (const (putStr "{}")) (mapM_ (putStr . either (\p -> show p <> " ") (const "Flashlight ")))
-    ppSide left
-    putStr " #----------# "
-    ppSide right
-    putStrLn ""
