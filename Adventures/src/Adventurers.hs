@@ -81,12 +81,12 @@ exec n s = allValidPlays s >>= exec (n-1)
 {-- Is it possible for all adventurers to be on the other side in <=17 min and not exceeding 5 moves ? --}
 -- To implement
 leq17 :: Bool
-leq17 = allSafeAnd (<= 17)
+leq17 = allSafeAndTimeIs (<= 17)
 
 {-- Is it possible for all adventurers to be on the other side in < 17 min ? --}
 -- To implement
 l17 :: Bool
-l17 = allSafeAnd (< 17)
+l17 = allSafeAndTimeIs (< 17)
 
 {-- Is it possible for any adventurers to be on the other side in < their ? --}
 anyLTheirTime :: Bool
@@ -103,8 +103,8 @@ withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gIn
                   diff = fmap (fmap (getAny . foldMap Any . zipWith (==) actual)) next
                 in foldr (\(f, b) acc-> not b || (((f fl) /= (s fl)) && acc)) True diff
 
-allSafeAnd :: (Int -> Bool) -> Bool
-allSafeAnd f = any (\x -> all (==True) (fmap snd (getValue x)) && f (getDuration x)) baseQuery
+allSafeAndTimeIs :: (Int -> Bool) -> Bool
+allSafeAndTimeIs f = any (\x -> all (==True) (fmap snd (getValue x)) && f (getDuration x)) baseQuery
 
 baseQuery :: [Duration [(Objects, Bool)]]
 baseQuery = remLD . fmap (\s -> fmap (\p -> (p, s p)) adv) $ exec 5 gInit
@@ -216,7 +216,6 @@ run times moves = do
     allQueries
     newLine
     sequence_ . intersperse newLine $ s times moves
-
 
 interface :: IO ()
 interface = loop gInit 0 0 "" 1 []
