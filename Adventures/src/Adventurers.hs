@@ -98,7 +98,7 @@ anyLessTheirTime = any (ap anyLessThanOwnTime getObjectStateList) baseQuery wher
     lessThanOwnTime isSafe s = either ((isSafe &&) . (getDuration s <) . getTimeAdv) ignore
     ignore = const False
 
-{-- All adventurers must pass with flashlight --}
+{-- All adventurers must pass with the flashlight --}
 withFlashlight :: Bool
 withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gInit where
     check :: State -> Bool
