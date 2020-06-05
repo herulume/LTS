@@ -1,11 +1,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Adventurers where
 
-import DurationMonad
-import Data.List
-import Data.Monoid
+import Data.List (intersperse, foldl', tails)
+import Data.Monoid (Any(..))
 import Control.Arrow ((&&&))
 import Control.Monad (ap)
+
+import DurationMonad
 
 -- The list of adventurers
 data Adventurer = P1 | P2 | P5 | P10 deriving (Show,Eq)
