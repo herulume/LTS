@@ -207,18 +207,6 @@ printPathByTime = cond null noPath printEachAction ... getPaths where
 --------------------------------------------------------------------------------
 -- IO
 
-allQueries :: IO ()
-allQueries = mapM_ putStrLn
-    [ "Is it possible for all adventurers to be on the other side in <=17 minutes and not exceeding 5 moves?"
-    , show leq17 <> "\n"
-    , "Is it possible for all adventurers to be on the other side in < 17 minutes and not exceeding 5 moves?"
-    , show l17 <> "\n"
-    , "Is it possible for any adventurer to be on the other side in < their own time?"
-    , show anyLessTheirTime <> "\n"
-    , "Any adventurer must always pass with the flashlight"
-    ,  show withFlashlight
-    ]
-
 run :: [Int] -> [Int] -> IO ()
 run times moves = do
     let sucess t0 m0 = putStrLn $ " (All in " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
@@ -231,6 +219,20 @@ run times moves = do
 
 interface :: IO ()
 interface = loop gInit 0 0 "" 1 []
+
+-- Aux IO
+
+allQueries :: IO ()
+allQueries = mapM_ putStrLn
+    [ "Is it possible for all adventurers to be on the other side in <=17 minutes and not exceeding 5 moves?"
+    , show leq17 <> "\n"
+    , "Is it possible for all adventurers to be on the other side in < 17 minutes and not exceeding 5 moves?"
+    , show l17 <> "\n"
+    , "Is it possible for any adventurer to be on the other side in < their own time?"
+    , show anyLessTheirTime <> "\n"
+    , "Any adventurer must always pass with the flashlight"
+    , show withFlashlight
+    ]
 
 loop :: State -> Int -> Int -> String -> Int -> [(String, State, Int)] -> IO ()
 loop s time acts logs nlOrl past = do
@@ -291,7 +293,7 @@ cond p f g = either f g . grd p where
   grd :: (a -> Bool) -> a -> Either a a
   grd pr x = if pr x then Left x else Right x
 
--- black bird
+-- blackbird
 (...) :: (c -> d) -> (a -> b -> c) -> a -> b -> d
 (...) = (.) . (.)
 
