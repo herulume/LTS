@@ -4,6 +4,8 @@ module Adventurers where
 import DurationMonad
 import Data.List
 import Data.Monoid
+import Control.Arrow ((&&&))
+import Control.Monad (ap)
 
 -- The list of adventurers
 data Adventurer = P1 | P2 | P5 | P10 deriving (Show,Eq)
@@ -70,7 +72,7 @@ allValidPlays s =
                                              , mChangeState [Left p', Left p'', Right ()] s
                                              )
 
-{-- For a given number n and initial state, the function calculates all possible n-sequences of moves that the adventures can make --}
+{-- For a given number n and initial state, the function calculates all possible n-sequences of moves that the adventurers can make --}
 -- To implement
 exec :: Int -> State -> ListDur State
 exec 0 _ = LD []
@@ -88,25 +90,35 @@ l17 :: Bool
 l17 = allSafeAndTimeIs (< 17)
 
 {-- Is it possible for any adventurers to be on the other side in < their ? --}
-anyLTheirTime :: Bool
-anyLTheirTime = any (\x -> any (\(p', s) -> either ((s &&) . (getDuration x <) . getTimeAdv) (const False) p') (getValue x)) baseQuery
+anyLessTheirTime :: Bool
+anyLessTheirTime = any (ap anyLessThanOwnTime getObjectStateList) baseQuery where
+    getObjectStateList = getValue
+    anyLessThanOwnTime s =  any (\(object, isSafe) -> lessThanOwnTime isSafe s object)
+    lessThanOwnTime isSafe s = either ((isSafe &&) . (getDuration s <) . getTimeAdv) ignore
+    ignore = const False
 
-{-- Must pass with flashlight --}
+
+{-- All adventurers  must pass with flashlight --}
 withFlashlight :: Bool
 withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gInit where
     check :: State -> Bool
-    check s = let os = [Left P1, Left P2, Left P5, Left P10]
+    check s = let advs = init adv
                   fl = Right ()
-                  actual = fmap s os
-                  next = fmap (\(Duration (_, l)) -> (l, fmap l os)) . remLD . allValidPlays $ s
+                  actual = fmap s advs
+                  next = fmap (\(Duration (_, l)) -> (l, fmap l advs)) . remLD . allValidPlays $ s
                   diff = fmap (fmap (getAny . foldMap Any . zipWith (==) actual)) next
                 in foldr (\(f, b) acc-> not b || (((f fl) /= (s fl)) && acc)) True diff
 
+{- Given a function to validate a duration, checks if there's a state where all objects are in the right side (True) and if the function holds -}
 allSafeAndTimeIs :: (Int -> Bool) -> Bool
-allSafeAndTimeIs f = any (\x -> all (==True) (fmap snd (getValue x)) && f (getDuration x)) baseQuery
+allSafeAndTimeIs f = any (uncurry (&&) . (allSafe &&& durationPredicateHolds)) baseQuery where
+    durationPredicateHolds = f . getDuration
+    allSafe = all (True ==) . fmap snd . getValue
 
+{- Given a list of states (with due duration), creates a list of each state applied to every possible object -}
 baseQuery :: [Duration [(Objects, Bool)]]
-baseQuery = remLD . fmap (\s -> fmap (\p -> (p, s p)) adv) $ exec 5 gInit
+baseQuery = remLD . objectsAndState $ exec 5 gInit where
+    objectsAndState = fmap (\s -> fmap (\p -> (p, s p)) adv)
 
 --------------------------------------------------------------------------
 data ListDur a = LD [Duration a] deriving Show
@@ -200,8 +212,8 @@ allQueries = mapM_ putStrLn
     , show leq17 <> "\n"
     , "Is it possible for all adventurers to be on the other side in < 17 minutes and not exceeding 5 moves?"
     , show l17 <> "\n"
-    , "Is it possible for any adventurers to be on the other side in < their own time?"
-    , show anyLTheirTime <> "\n"
+    , "Is it possible for any adventurer to be on the other side in < their own time?"
+    , show anyLessTheirTime <> "\n"
     , "Any adventurer must always pass with the flashlight"
     ,  show withFlashlight
     ]
