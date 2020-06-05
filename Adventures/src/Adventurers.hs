@@ -98,8 +98,7 @@ anyLessTheirTime = any (ap anyLessThanOwnTime getObjectStateList) baseQuery wher
     lessThanOwnTime isSafe s = either ((isSafe &&) . (getDuration s <) . getTimeAdv) ignore
     ignore = const False
 
-
-{-- All adventurers  must pass with flashlight --}
+{-- All adventurers must pass with flashlight --}
 withFlashlight :: Bool
 withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gInit where
     check :: State -> Bool
@@ -109,6 +108,17 @@ withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gIn
                   next = fmap (\(Duration (_, l)) -> (l, fmap l advs)) . remLD . allValidPlays $ s
                   diff = fmap (fmap (getAny . foldMap Any . zipWith (==) actual)) next
                 in foldr (\(f, b) acc-> not b || (((f fl) /= (s fl)) && acc)) True diff
+
+{- At most 2 adventurers pass -}
+atMost2 :: Bool
+atMost2 = all max2FromHere allStates where
+    allStates = fmap getValue . remLD $ exec 5 gInit
+    max2FromHere :: State -> Bool
+    max2FromHere s = all (<= 2) . fmap diff . nextStates $ s where
+        diff st = length . filter (False ==) . (zipWith (==) current) $ fmap st advs
+        current = fmap s advs
+        nextStates =  fmap getValue . remLD . allValidPlays
+        advs = init adv
 
 {- Given a function to validate a duration, checks if there's a state where all objects are in the right side (True) and if the function holds -}
 allSafeAndTimeIs :: (Int -> Bool) -> Bool
@@ -230,8 +240,10 @@ allQueries = mapM_ putStrLn
     , show l17 <> "\n"
     , "Is it possible for any adventurer to be on the other side in < their own time?"
     , show anyLessTheirTime <> "\n"
-    , "Any adventurer must always pass with the flashlight"
-    , show withFlashlight
+    , "Any adventurer must always pass with the flashlight."
+    , show withFlashlight <> "\n"
+    , "At most only two adventurers pass."
+    , show atMost2
     ]
 
 loop :: State -> Int -> Int -> String -> Int -> [(String, State, Int)] -> IO ()
