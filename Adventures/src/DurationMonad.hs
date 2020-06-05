@@ -5,10 +5,10 @@ module DurationMonad where
 data Duration a = Duration (Int, a) deriving Show
 
 getDuration :: Duration a -> Int
-getDuration (Duration (d,x)) = d
+getDuration (Duration (d,_)) = d
 
 getValue :: Duration a -> a
-getValue (Duration (d,x)) = x
+getValue (Duration (_,x)) = x
 
 instance Functor Duration where
   fmap f (Duration (i,x)) = Duration (i,f x)
