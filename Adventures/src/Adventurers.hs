@@ -4,7 +4,7 @@ module Adventurers where
 import Data.List (intersperse, foldl', tails)
 import Data.Monoid (Any(..))
 import Control.Arrow ((&&&))
-import Control.Monad (ap)
+import Control.Monad (ap, join)
 
 import DurationMonad
 
@@ -63,14 +63,14 @@ possible moves that the adventurers can make.  --}
 -- To implement
 allValidPlays :: State -> ListDur State
 allValidPlays s =
-    let fLSide  = s . Right $ ()
-        valid   = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
+    let flSide  = s flashlight
+        valid   = foldr (\p a -> if flSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
         pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
      in LD $ do
          (p', p'') <- pairs valid
-         if p' == p'' then return $ Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
+         if p' == p'' then return $ Duration (getTimeAdv p', mChangeState [Left p', flashlight] s)
                       else return $ Duration ( max (getTimeAdv p') (getTimeAdv p'')
-                                             , mChangeState [Left p', Left p'', Right ()] s
+                                             , mChangeState [Left p', Left p'', flashlight] s
                                              )
 
 {-- For a given number n and initial state, the function calculates all possible n-sequences of moves that the adventurers can make --}
@@ -102,12 +102,10 @@ anyLessTheirTime = any (ap anyLessThanOwnTime getObjectStateList) baseQuery wher
 withFlashlight :: Bool
 withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gInit where
     check :: State -> Bool
-    check s = let advs = init adv
-                  fl = Right ()
-                  actual = fmap s advs
-                  next = fmap (\(Duration (_, l)) -> (l, fmap l advs)) . remLD . allValidPlays $ s
+    check s = let actual = fmap s advNoFlashLight
+                  next = fmap (\(Duration (_, l)) -> (l, fmap l advNoFlashLight)) . remLD . allValidPlays $ s
                   diff = fmap (fmap (getAny . foldMap Any . zipWith (==) actual)) next
-                in foldr (\(f, b) acc-> not b || (((f fl) /= (s fl)) && acc)) True diff
+                in foldr (\(f, b) acc-> not b || (((f flashlight) /= (s flashlight)) && acc)) True diff
 
 {- At most 2 adventurers pass -}
 atMost2 :: Bool
@@ -115,10 +113,9 @@ atMost2 = all max2FromHere allStates where
     allStates = fmap getValue . remLD $ exec 5 gInit
     max2FromHere :: State -> Bool
     max2FromHere s = all (<= 2) . fmap diff . nextStates $ s where
-        diff st = length . filter (False ==) . (zipWith (==) current) $ fmap st advs
-        current = fmap s advs
+        diff st = length . filter (False ==) . (zipWith (==) current) $ fmap st advNoFlashLight
+        current = fmap s advNoFlashLight
         nextStates =  fmap getValue . remLD . allValidPlays
-        advs = init adv
 
 {- Given a function to validate a duration, checks if there's a state where all objects are in the right side (True) and if the function holds -}
 allSafeAndTimeIs :: (Int -> Bool) -> Bool
@@ -181,18 +178,18 @@ instance Monoid w => Monad (ListDurLog w) where
 
 allValidPlaysD :: State -> ListDurLog String State
 allValidPlaysD s =
-    let fLSide  = s . Right $ ()
-        valid   = foldr (\p a -> if fLSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
+    let flSide  = s flashlight
+        valid   = foldr (\p a -> if flSide == s (Left p) then p:a else a) [] [P1, P2, P5, P10]
         pairs l = [(x,y) | (x:ys) <- tails l, y <- x:ys]
         backOrForth s0 p = if s0 p then (<> "crossed back the bridge >") else (<> "crossed the bridge >")
      in LDL $ do
          (p', p'') <- pairs valid
          if p' == p'' then return ( backOrForth s (Left p') (show p' <> " ")
-                                  , Duration (getTimeAdv p', mChangeState [Left p', Right ()] s)
+                                  , Duration (getTimeAdv p', mChangeState [Left p', flashlight] s)
                                   )
                       else return ( backOrForth s (Left p') (show p' <> " and " <> show p'' <> " both ")
                                   , Duration ( max (getTimeAdv p') (getTimeAdv p'')
-                                             , mChangeState [Left p', Left p'', Right ()] s
+                                             , mChangeState [Left p', Left p'', flashlight] s
                                              )
                                   )
 
@@ -233,17 +230,22 @@ interface = loop gInit 0 0 "" 1 []
 -- Aux IO
 
 allQueries :: IO ()
-allQueries = mapM_ putStrLn
-    [ "Is it possible for all adventurers to be on the other side in <=17 minutes and not exceeding 5 moves?"
-    , show leq17 <> "\n"
-    , "Is it possible for all adventurers to be on the other side in < 17 minutes and not exceeding 5 moves?"
-    , show l17 <> "\n"
-    , "Is it possible for any adventurer to be on the other side in < their own time?"
-    , show anyLessTheirTime <> "\n"
-    , "Any adventurer must always pass with the flashlight."
-    , show withFlashlight <> "\n"
-    , "At most only two adventurers pass."
-    , show atMost2
+allQueries = mapM_ (putStrLn . join) $
+    [ [ "Is it possible for all adventurers to be on the other side in <=17 minutes and not exceeding 5 moves? "
+      , show leq17
+      ]
+    , [ "Is it possible for all adventurers to be on the other side in < 17 minutes and not exceeding 5 moves? "
+      , show l17
+      ]
+    , [ "Is it possible for any adventurer to be on the other side in < their own time? "
+      , show anyLessTheirTime
+      ]
+    , [ "Any adventurer must always pass with the flashlight: "
+      , show withFlashlight
+      ]
+    , [ "At most only two adventurers pass: "
+      , show atMost2
+      ]
     ]
 
 loop :: State -> Int -> Int -> String -> Int -> [(String, State, Int)] -> IO ()
@@ -265,15 +267,17 @@ loop s time acts logs nlOrl past = do
     chooseNextScreen choice s time acts logs nlOrl past plays
 
 chooseNextScreen :: Int -> State -> Int -> Int -> String -> Int -> [(String, State, Int)] -> [(String, Duration State)] -> IO ()
-chooseNextScreen (-1) s time acts logs nlOrl [] _         = loop s time acts logs nlOrl []
-chooseNextScreen (-1) _ _ acts _ nlOrl (p:ps) _          = (\(logs0, s0, d0) -> loop s0 d0 (acts-1) logs0 ((nlOrl `mod` 3) - 1) ps) p
+chooseNextScreen (-1) s time acts logs nlOrl [] _ =
+    loop s time acts logs nlOrl []
+chooseNextScreen (-1) _ _ acts _ nlOrl (p:ps) _  =
+    (\(logs0, s0, d0) -> loop s0 d0 (acts-1) logs0 ((nlOrl `mod` 3) - 1) ps) p
 chooseNextScreen choice s time acts logs nlOrl past plays | choice `elem` [0..(length plays)-1] = do
-           let (w, (Duration (d, s'))) = plays !! choice
-           putStrLn w
-           let newLog = if nlOrl == 3 then logs <> " " <> w <> "\n" else logs <> " " <> w
-           loop s' (d+time) (acts+1) newLog ((nlOrl `mod` 3) + 1) ((logs, s, time):past)
-                                                         | choice == 99 = clear >> putStrLn "Bye! :D"
-                                                         | otherwise =  loop s time acts logs nlOrl past
+    let (w, (Duration (d, s'))) = plays !! choice
+    putStrLn w
+    let newLog = if nlOrl == 3 then logs <> " " <> w <> "\n" else logs <> " " <> w
+    loop s' (d+time) (acts+1) newLog ((nlOrl `mod` 3) + 1) ((logs, s, time):past)
+                                                          | choice == 99 = clear >> putStrLn "Bye! :D"
+                                                          | otherwise =  loop s time acts logs nlOrl past
 
 ppState :: State -> IO ()
 ppState s = do
@@ -311,3 +315,10 @@ cond p f g = either f g . grd p where
 
 adv :: [Objects]
 adv = [Left P1, Left P2, Left P5, Left P10, Right ()]
+
+advNoFlashLight :: [Objects]
+advNoFlashLight = [Left P1, Left P2, Left P5, Left P10]
+
+flashlight :: Objects
+flashlight = Right ()
+
