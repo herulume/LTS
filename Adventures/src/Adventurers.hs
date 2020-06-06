@@ -99,8 +99,8 @@ anyLessTheirTime = any (ap anyLessThanOwnTime getObjectStateList) baseQuery wher
     ignore = const False
 
 {-- All adventurers must pass with the flashlight --}
-withFlashlight :: Bool
-withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gInit where
+withFlashlight :: Int -> Bool
+withFlashlight n = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec n gInit where
     check :: State -> Bool
     check s = let actual = fmap s advNoFlashLight
                   next = fmap (\(Duration (_, l)) -> (l, fmap l advNoFlashLight)) . remLD . allValidPlays $ s
@@ -108,9 +108,9 @@ withFlashlight = all check . fmap (\(Duration (_, l)) -> l) . remLD $ exec 5 gIn
                 in foldr (\(f, b) acc-> not b || (((f flashlight) /= (s flashlight)) && acc)) True diff
 
 {- At most 2 adventurers pass -}
-atMost2 :: Bool
-atMost2 = all max2FromHere allStates where
-    allStates = fmap getValue . remLD $ exec 5 gInit
+atMost2 :: Int -> Bool
+atMost2 n = all max2FromHere allStates where
+    allStates = fmap getValue . remLD $ exec n gInit
     max2FromHere :: State -> Bool
     max2FromHere s = all (<= 2) . fmap diff . nextStates $ s where
         diff st = length . filter (False ==) . (zipWith (==) current) $ fmap st advNoFlashLight
@@ -227,12 +227,12 @@ printPathByTime = cond null noPath printEachAction ... getPaths where
 -- IO
 
 run :: Int -> [Int] -> [Int] -> IO ()
-run deadlock times moves = do
+run n times moves = do
     let sucess t0 m0 = putStrLn $ " (All in " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let err t0 m0 = putStrLn $ " (For " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s' -> if null s' then sucess t m else err t m))
 
-    allQueries deadlock
+    allQueries n
     newLine
     sequence_ . intersperse newLine $ s times moves
 
@@ -252,11 +252,11 @@ allQueries n = mapM_ (putStrLn . join) $
     , [ "Is it possible for any adventurer to be on the other side in < their own time? "
       , show anyLessTheirTime
       ]
-    , [ "Any adventurer must always pass with the flashlight: "
-      , show withFlashlight
+    , [ "Any adventurer must always pass with the flashlight (" <> show n <> " move(s)): "
+      , show $ withFlashlight n
       ]
-    , [ "At most only two adventurers pass: "
-      , show atMost2
+    , [ "At most only two adventurers pass (" <> show n <> " move(s)): "
+      , show $ atMost2 n
       ]
     , [ "No deadlock possible in " <> show n <> " moves: "
       , show $ noDeadlockIn n
