@@ -117,6 +117,18 @@ atMost2 = all max2FromHere allStates where
         current = fmap s advNoFlashLight
         nextStates =  fmap getValue . remLD . allValidPlays
 
+{- Not deadlock possible in N moves -}
+noDeadlockIn :: Int -> Bool
+noDeadlockIn n = diffFromNext (0, gInit) && next n gInit where
+    diffFromNext v@(_, s) = v `notElem` ((toList . allValidPlays) s)
+    toList = fmap (\(Duration x) -> x) . remLD
+    next :: Int -> State -> Bool
+    next 0 _ = True
+    next r s = let nvp = allValidPlays s
+                in all (==True) $ do
+                    v@(_, ns) <- toList nvp
+                    return $ diffFromNext v && next (r-1) ns
+
 {- Given a function to validate a duration, checks if there's a state where all objects are in the right side (True) and if the function holds -}
 allSafeAndTimeIs :: (Int -> Bool) -> Bool
 allSafeAndTimeIs f = any (uncurry (&&) . (allSafe &&& durationPredicateHolds)) baseQuery where
@@ -214,13 +226,13 @@ printPathByTime = cond null noPath printEachAction ... getPaths where
 --------------------------------------------------------------------------------
 -- IO
 
-run :: [Int] -> [Int] -> IO ()
-run times moves = do
+run :: Int -> [Int] -> [Int] -> IO ()
+run deadlock times moves = do
     let sucess t0 m0 = putStrLn $ " (All in " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let err t0 m0 = putStrLn $ " (For " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s' -> if null s' then sucess t m else err t m))
 
-    allQueries
+    allQueries deadlock
     newLine
     sequence_ . intersperse newLine $ s times moves
 
@@ -229,8 +241,8 @@ interface = loop gInit 0 0 "" 1 []
 
 -- Aux IO
 
-allQueries :: IO ()
-allQueries = mapM_ (putStrLn . join) $
+allQueries :: Int -> IO ()
+allQueries n = mapM_ (putStrLn . join) $
     [ [ "Is it possible for all adventurers to be on the other side in <=17 minutes and not exceeding 5 moves? "
       , show leq17
       ]
@@ -245,6 +257,9 @@ allQueries = mapM_ (putStrLn . join) $
       ]
     , [ "At most only two adventurers pass: "
       , show atMost2
+      ]
+    , [ "No deadlock possible in " <> show n <> " moves: "
+      , show $ noDeadlockIn n
       ]
     ]
 
