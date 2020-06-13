@@ -140,7 +140,7 @@ baseQuery :: [Duration [(Objects, Bool)]]
 baseQuery = remLD . objectsAndState $ exec 5 gInit where
     objectsAndState = fmap (\s -> fmap (\p -> (p, s p)) adv)
 
---------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 data ListDur a = LD [Duration a] deriving Show
 
 remLD :: ListDur a -> [Duration a]
@@ -226,14 +226,11 @@ printPathByTime = cond null noPath printEachAction ... getPaths where
 --------------------------------------------------------------------------------
 -- IO
 
-run :: Int -> [Int] -> [Int] -> IO ()
-run n times moves = do
+run :: [Int] -> [Int] -> IO ()
+run times moves = do
     let sucess t0 m0 = putStrLn $ " (All in " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let err t0 m0 = putStrLn $ " (For " <> show t0 <> " minutes and " <> show m0 <> " step(s))"
     let s = zipWith (\t m -> printPathByTime t (execD m gInit) >>= (\s' -> if null s' then sucess t m else err t m))
-
-    allQueries n
-    newLine
     sequence_ . intersperse newLine $ s times moves
 
 interface :: IO ()
